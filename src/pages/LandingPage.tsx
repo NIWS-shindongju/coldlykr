@@ -150,6 +150,7 @@ const LandingPage = () => {
                 <Button
                   variant={plan.recommended ? "default" : "outline"}
                   className="w-full"
+                  onClick={() => navigate("/pricing")}
                 >
                   시작하기
                 </Button>
