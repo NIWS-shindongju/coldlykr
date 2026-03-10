@@ -664,7 +664,5 @@ const SummaryItem = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-// Need to import Megaphone for Step 1
-import { Megaphone } from "lucide-react";
 
 export default CampaignCreate;
