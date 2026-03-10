@@ -14,6 +14,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
+import CampaignDetail from "./pages/CampaignDetail";
 import Contacts from "./pages/Contacts";
 import Domains from "./pages/Domains";
 import Pricing from "./pages/Pricing";
