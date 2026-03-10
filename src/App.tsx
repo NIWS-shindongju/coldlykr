@@ -15,17 +15,8 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const AppRoutes = () => (
-  <AppLayout>
-    <Routes>
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/campaigns" element={<Campaigns />} />
-      <Route path="/contacts" element={<Contacts />} />
-      <Route path="/domains" element={<Domains />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route path="/settings" element={<SettingsPage />} />
-    </Routes>
-  </AppLayout>
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => (
+  <AppLayout>{children}</AppLayout>
 );
 
 const App = () => (
@@ -36,12 +27,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/dashboard/*" element={<AppRoutes />} />
-          <Route path="/campaigns" element={<AppRoutes />} />
-          <Route path="/contacts" element={<AppRoutes />} />
-          <Route path="/domains" element={<AppRoutes />} />
-          <Route path="/pricing" element={<AppRoutes />} />
-          <Route path="/settings" element={<AppRoutes />} />
+          <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+          <Route path="/campaigns" element={<DashboardLayout><Campaigns /></DashboardLayout>} />
+          <Route path="/contacts" element={<DashboardLayout><Contacts /></DashboardLayout>} />
+          <Route path="/domains" element={<DashboardLayout><Domains /></DashboardLayout>} />
+          <Route path="/pricing" element={<DashboardLayout><Pricing /></DashboardLayout>} />
+          <Route path="/settings" element={<DashboardLayout><SettingsPage /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
