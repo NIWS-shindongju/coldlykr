@@ -254,6 +254,34 @@ const CampaignDetail = () => {
         <SummaryCard icon={<AlertCircle className="h-5 w-5 text-destructive" />} label="반송" count={stats.bounced} pct={pct(stats.bounced)} />
       </div>
 
+      {/* Sequence Stats */}
+      {campaign?.use_sequence && (
+        <Card>
+          <CardContent className="pt-5 pb-4 px-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Send className="h-4 w-4 text-muted-foreground" />시퀀스 현황
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">1차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step1}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">2차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step2}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">3차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step3}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
