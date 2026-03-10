@@ -118,6 +118,19 @@ const Contacts = () => {
 
   return (
     <div className="relative pb-20">
+      {/* 큐디비 Banner */}
+      <div className="mb-6 rounded-lg border bg-primary/5 p-4 flex items-center justify-between">
+        <div>
+          <p className="font-medium text-sm">더 많은 DB가 필요하신가요?</p>
+          <p className="text-xs text-muted-foreground mt-0.5">큐디비에서 1,000만건+ 한국 기업 데이터를 직접 구독하세요.</p>
+        </div>
+        <Button size="sm" variant="outline" asChild>
+          <a href="https://qudb.co.kr" target="_blank" rel="noopener noreferrer">
+            큐디비 직접 구독하기 →
+          </a>
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">

@@ -74,6 +74,21 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* 큐디비 Partner Link */}
+        <div className="mt-auto px-4 pb-4">
+          <a
+            href="https://qudb.co.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg border bg-sidebar-accent/50 p-2.5 hover:bg-sidebar-accent transition-colors"
+          >
+            <img src={qudbLogo} alt="큐디비" className="h-5 w-5 object-contain shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-medium text-sidebar-foreground">큐디비 구독하기</span>
+            )}
+          </a>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
