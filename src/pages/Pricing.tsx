@@ -63,7 +63,7 @@ const Pricing = () => {
       // Load TossPayments SDK
       const { loadTossPayments } = await import("@tosspayments/tosspayments-sdk");
       const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
-      const billing = await tossPayments.billing();
+      const billing = await (tossPayments as any).billing();
 
       await billing.requestBillingAuth({
         method: "CARD",
