@@ -14,11 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_contacts: {
+        Row: {
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          opened_at: string | null
+          sent_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
+          body: string | null
           created_at: string
+          daily_sent_count: number | null
           id: string
+          last_send_date: string | null
+          max_per_day: number | null
           name: string
+          reply_email: string | null
+          send_interval: number | null
+          sender_email: string | null
+          sender_name: string | null
           status: Database["public"]["Enums"]["campaign_status"]
           subject: string | null
           total_opened: number
@@ -28,9 +87,17 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          body?: string | null
           created_at?: string
+          daily_sent_count?: number | null
           id?: string
+          last_send_date?: string | null
+          max_per_day?: number | null
           name: string
+          reply_email?: string | null
+          send_interval?: number | null
+          sender_email?: string | null
+          sender_name?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           subject?: string | null
           total_opened?: number
@@ -40,9 +107,17 @@ export type Database = {
           user_id: string
         }
         Update: {
+          body?: string | null
           created_at?: string
+          daily_sent_count?: number | null
           id?: string
+          last_send_date?: string | null
+          max_per_day?: number | null
           name?: string
+          reply_email?: string | null
+          send_interval?: number | null
+          sender_email?: string | null
+          sender_name?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           subject?: string | null
           total_opened?: number
