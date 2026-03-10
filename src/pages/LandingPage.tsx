@@ -68,7 +68,7 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-              한국 기업 500만곳에
+              한국 기업 1,000만곳에
               <br />
               콜드메일을 자동으로
             </h1>
