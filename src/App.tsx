@@ -19,6 +19,8 @@ import Contacts from "./pages/Contacts";
 import Domains from "./pages/Domains";
 import Pricing from "./pages/Pricing";
 import SettingsPage from "./pages/SettingsPage";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFail from "./pages/PaymentFail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
