@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaigns: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["campaign_status"]
+          subject: string | null
+          total_opened: number
+          total_replied: number
+          total_sent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          subject?: string | null
+          total_opened?: number
+          total_replied?: number
+          total_sent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["campaign_status"]
+          subject?: string | null
+          total_opened?: number
+          total_replied?: number
+          total_sent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_stats: {
+        Row: {
+          date: string
+          id: string
+          opens: number
+          replies: number
+          sends: number
+          user_id: string
+        }
+        Insert: {
+          date?: string
+          id?: string
+          opens?: number
+          replies?: number
+          sends?: number
+          user_id: string
+        }
+        Update: {
+          date?: string
+          id?: string
+          opens?: number
+          replies?: number
+          sends?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -49,7 +115,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      campaign_status: "draft" | "active" | "paused" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -176,6 +242,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      campaign_status: ["draft", "active", "paused", "completed"],
+    },
   },
 } as const
