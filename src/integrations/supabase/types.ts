@@ -188,6 +188,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          order_id: string | null
+          paid_at: string
+          payment_key: string | null
+          plan: string
+          receipt_url: string | null
+          status: string
+          tax_invoice_requested: boolean
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string
+          payment_key?: string | null
+          plan: string
+          receipt_url?: string | null
+          status?: string
+          tax_invoice_requested?: boolean
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string
+          payment_key?: string | null
+          plan?: string
+          receipt_url?: string | null
+          status?: string
+          tax_invoice_requested?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -210,6 +252,45 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          billing_key: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          customer_key: string | null
+          id: string
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_key?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_key?: string | null
+          id?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_key?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          customer_key?: string | null
+          id?: string
+          plan?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }

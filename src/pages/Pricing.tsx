@@ -1,56 +1,135 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Crown, Zap, Rocket } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+const TOSS_CLIENT_KEY = "test_ck_P9BRQmyarYBlDDEzGbML8J07KzLN";
 
 const plans = [
   {
-    name: "스타터",
-    price: "무료",
-    features: ["월 100건 발송", "연락처 500명", "기본 템플릿"],
-    cta: "현재 플랜",
-    active: true,
+    id: "starter",
+    name: "Starter",
+    price: 29000,
+    priceLabel: "₩29,000/월",
+    icon: Zap,
+    features: ["하루 100통 발송", "캠페인 3개", "연락처 1만건"],
   },
   {
-    name: "프로",
-    price: "₩49,000/월",
-    features: ["월 5,000건 발송", "연락처 무제한", "A/B 테스트", "맞춤 템플릿"],
-    cta: "업그레이드",
-    active: false,
+    id: "growth",
+    name: "Growth",
+    price: 69000,
+    priceLabel: "₩69,000/월",
+    icon: Rocket,
+    popular: true,
+    features: ["하루 500통 발송", "캠페인 무제한", "연락처 10만건", "시퀀스 기능"],
   },
   {
-    name: "엔터프라이즈",
-    price: "₩149,000/월",
-    features: ["무제한 발송", "연락처 무제한", "전용 IP", "API 액세스", "전담 매니저"],
-    cta: "문의하기",
-    active: false,
+    id: "scale",
+    name: "Scale",
+    price: 149000,
+    priceLabel: "₩149,000/월",
+    icon: Crown,
+    features: ["하루 2,000통 발송", "연락처 무제한", "팀원 3명", "전용 CS"],
   },
 ];
 
 const Pricing = () => {
+  const { user } = useAuth();
+  const [currentPlan, setCurrentPlan] = useState<string>("free");
+  const [loading, setLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscriptions")
+      .select("plan, status")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && data.status === "active") setCurrentPlan(data.plan);
+      });
+  }, [user]);
+
+  const handleSubscribe = async (planId: string) => {
+    if (!user) return;
+    setLoading(planId);
+
+    try {
+      const customerKey = `cust_${user.id.replace(/-/g, "").slice(0, 20)}`;
+      
+      // Load TossPayments SDK
+      const { loadTossPayments } = await import("@tosspayments/tosspayments-sdk");
+      const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
+      const billing = await (tossPayments as any).billing();
+
+      await billing.requestBillingAuth({
+        method: "CARD",
+        successUrl: `${window.location.origin}/payment/success?plan=${planId}&customerKey=${customerKey}`,
+        failUrl: `${window.location.origin}/payment/fail`,
+        customerEmail: user.email || "",
+        customerKey,
+      });
+    } catch (err: any) {
+      if (err?.code !== "USER_CANCEL") {
+        toast.error("결제 요청 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">요금제</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`p-6 flex flex-col ${!plan.active ? "" : "border-primary ring-1 ring-primary"}`}
-          >
-            <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
-            <p className="text-2xl font-bold mb-4">{plan.price}</p>
-            <ul className="space-y-2 mb-6 flex-1">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-primary shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button variant={plan.active ? "outline" : "default"} className="w-full">
-              {plan.cta}
-            </Button>
-          </Card>
-        ))}
+      <h1 className="text-2xl font-bold mb-2">요금제</h1>
+      <p className="text-muted-foreground mb-8">비즈니스 성장에 맞는 요금제를 선택하세요.</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl">
+        {plans.map((plan) => {
+          const isCurrent = currentPlan === plan.id;
+          const Icon = plan.icon;
+          return (
+            <Card
+              key={plan.id}
+              className={`p-6 flex flex-col relative ${
+                plan.popular ? "border-primary ring-2 ring-primary" : ""
+              }`}
+            >
+              {plan.popular && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                  인기
+                </span>
+              )}
+              <div className="flex items-center gap-2 mb-2">
+                <Icon className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">{plan.name}</h3>
+              </div>
+              <p className="text-3xl font-bold mb-1">{plan.priceLabel}</p>
+              <p className="text-xs text-muted-foreground mb-6">VAT 별도</p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-primary shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                variant={isCurrent ? "outline" : "default"}
+                className="w-full"
+                disabled={isCurrent || loading !== null}
+                onClick={() => handleSubscribe(plan.id)}
+              >
+                {loading === plan.id
+                  ? "처리중..."
+                  : isCurrent
+                  ? "현재 플랜"
+                  : "구독하기"}
+              </Button>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
