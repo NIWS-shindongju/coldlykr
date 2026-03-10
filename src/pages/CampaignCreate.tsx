@@ -25,7 +25,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft, ArrowRight, Check, CalendarIcon, Send, Mail,
+  ArrowLeft, ArrowRight, Check, CalendarIcon, Send, Mail, Megaphone,
   User, AtSign, Reply, Bold, Italic, Link2, WrapText, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
