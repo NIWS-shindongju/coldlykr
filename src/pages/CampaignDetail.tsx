@@ -420,6 +420,9 @@ const CampaignDetail = () => {
                           {cc.sent_at ? format(new Date(cc.sent_at), "MM.dd HH:mm", { locale: ko }) : "-"}
                         </TableCell>
                         <TableCell>
+                          <Badge variant="outline">{cc.sequence_step ?? 1}차</Badge>
+                        </TableCell>
+                        <TableCell>
                           <span className={cn("inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium", cfg.badgeClass)}>
                             <span className={cn("h-1.5 w-1.5 rounded-full", cfg.dotClass)} />
                             {cfg.label}

@@ -147,7 +147,7 @@ const CampaignCreate = () => {
     if (!user) return;
 
     // 1. Create campaign with all settings
-    const { data: campaign, error } = await supabase.from("campaigns").insert({
+    const campaignInsert: any = {
       user_id: user.id,
       name: campaignName,
       subject,
@@ -159,7 +159,21 @@ const CampaignCreate = () => {
       max_per_day: maxPerDay[0],
       status: "draft",
       total_sent: 0,
-    }).select().single();
+      use_sequence: useSequence,
+    };
+
+    if (useSequence && sequences.length >= 1) {
+      campaignInsert.sequence_2_days = sequences[0].daysAfter;
+      campaignInsert.sequence_2_subject = sequences[0].subject;
+      campaignInsert.sequence_2_body = sequences[0].body;
+    }
+    if (useSequence && sequences.length >= 2) {
+      campaignInsert.sequence_3_days = sequences[1].daysAfter;
+      campaignInsert.sequence_3_subject = sequences[1].subject;
+      campaignInsert.sequence_3_body = sequences[1].body;
+    }
+
+    const { data: campaign, error } = await supabase.from("campaigns").insert(campaignInsert).select().single();
 
     if (error || !campaign) {
       toast.error("캠페인 생성에 실패했습니다.");
