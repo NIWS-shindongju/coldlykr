@@ -145,19 +145,50 @@ const CampaignCreate = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
-    const { error } = await supabase.from("campaigns").insert({
+
+    // 1. Create campaign with all settings
+    const { data: campaign, error } = await supabase.from("campaigns").insert({
       user_id: user.id,
       name: campaignName,
       subject,
-      status: sendNow ? "active" : "draft",
+      body,
+      sender_name: senderName,
+      sender_email: senderEmail,
+      reply_email: replyEmail || senderEmail,
+      send_interval: interval,
+      max_per_day: maxPerDay[0],
+      status: "draft",
       total_sent: 0,
-    });
-    if (error) {
+    }).select().single();
+
+    if (error || !campaign) {
       toast.error("캠페인 생성에 실패했습니다.");
       return;
     }
+
+    // 2. Fetch matching contacts and create campaign_contacts
+    let contactQuery = supabase.from("contacts").select("id").limit(actualSendCount);
+    if (selectedCategories.size > 0) {
+      contactQuery = contactQuery.in("category", Array.from(selectedCategories));
+    }
+    if (selectedRegions.size > 0) {
+      contactQuery = contactQuery.in("region", Array.from(selectedRegions));
+    }
+    const { data: contactIds } = await contactQuery;
+
+    if (contactIds && contactIds.length > 0) {
+      const rows = contactIds.map((c) => ({
+        campaign_id: campaign.id,
+        contact_id: c.id,
+        user_id: user.id,
+        status: "pending",
+      }));
+      await supabase.from("campaign_contacts").insert(rows);
+    }
+
     toast.success("캠페인이 생성되었습니다!");
-    navigate("/campaigns");
+    navigate(`/campaigns/${campaign.id}`);
+  };
   };
 
   const canProceed = () => {
