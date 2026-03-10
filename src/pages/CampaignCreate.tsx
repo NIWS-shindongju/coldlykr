@@ -189,7 +189,6 @@ const CampaignCreate = () => {
     toast.success("캠페인이 생성되었습니다!");
     navigate(`/campaigns/${campaign.id}`);
   };
-  };
 
   const canProceed = () => {
     switch (currentStep) {
