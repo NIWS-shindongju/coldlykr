@@ -1,21 +1,261 @@
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Upload, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type ContactRow = Database["public"]["Tables"]["contacts"]["Row"];
+type Category = Database["public"]["Enums"]["contact_category"];
+type Region = Database["public"]["Enums"]["contact_region"];
+
+const categories: { label: string; value: Category | "all" }[] = [
+  { label: "전체", value: "all" },
+  { label: "음식점·카페", value: "음식점·카페" },
+  { label: "쇼핑·유통", value: "쇼핑·유통" },
+  { label: "IT·소프트웨어", value: "IT·소프트웨어" },
+  { label: "제조업", value: "제조업" },
+  { label: "서비스업", value: "서비스업" },
+  { label: "의료·헬스", value: "의료·헬스" },
+  { label: "교육", value: "교육" },
+  { label: "부동산·건설", value: "부동산·건설" },
+];
+
+const regions: { label: string; value: Region | "all" }[] = [
+  { label: "전체", value: "all" },
+  { label: "서울", value: "서울" },
+  { label: "경기", value: "경기" },
+  { label: "부산", value: "부산" },
+  { label: "인천", value: "인천" },
+  { label: "대구", value: "대구" },
+  { label: "광주", value: "광주" },
+  { label: "대전", value: "대전" },
+];
+
+const PAGE_SIZE = 50;
 
 const Contacts = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
+  const [selectedRegion, setSelectedRegion] = useState<Region | "all">("all");
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const { data: contacts = [], isLoading } = useQuery({
+    queryKey: ["contacts", user?.id, selectedCategory, selectedRegion, search],
+    queryFn: async () => {
+      let query = supabase.from("contacts").select("*").order("created_at", { ascending: false });
+
+      if (selectedCategory !== "all") {
+        query = query.eq("category", selectedCategory);
+      }
+      if (selectedRegion !== "all") {
+        query = query.eq("region", selectedRegion);
+      }
+      if (search.trim()) {
+        query = query.or(`company_name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as ContactRow[];
+    },
+    enabled: !!user,
+  });
+
+  const totalCount = contacts.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const pagedContacts = useMemo(
+    () => contacts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [contacts, page]
+  );
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === pagedContacts.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(pagedContacts.map((c) => c.id)));
+    }
+  };
+
+  const handleExcelUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.xlsx,.xls";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      // CSV parsing placeholder
+      toast.info("CSV 파일 업로드 기능은 곧 지원됩니다.");
+    };
+    input.click();
+  };
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">연락처 DB</h1>
-        <div className="flex gap-2">
-          <Button variant="outline"><Upload className="h-4 w-4 mr-2" />CSV 업로드</Button>
-          <Button><Plus className="h-4 w-4 mr-2" />연락처 추가</Button>
+    <div className="relative pb-20">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">연락처 DB</h1>
+          <Badge variant="secondary" className="text-sm">{totalCount.toLocaleString()}개</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExcelUpload}>
+            <Upload className="h-4 w-4 mr-2" />엑셀 업로드
+          </Button>
         </div>
       </div>
-      <Card className="p-12 flex flex-col items-center justify-center text-center">
-        <p className="text-muted-foreground mb-4">연락처를 추가하거나 CSV 파일을 업로드하세요.</p>
-        <Button variant="outline">연락처 가져오기</Button>
-      </Card>
+
+      {/* Search + Region Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="업체명, 이메일 검색"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          value={selectedRegion}
+          onValueChange={(v) => { setSelectedRegion(v as Region | "all"); setPage(0); }}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="지역" />
+          </SelectTrigger>
+          <SelectContent>
+            {regions.map((r) => (
+              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Category Tabs */}
+      <div className="flex gap-1 overflow-x-auto pb-2 mb-4">
+        {categories.map((cat) => (
+          <Button
+            key={cat.value}
+            size="sm"
+            variant={selectedCategory === cat.value ? "default" : "ghost"}
+            className="shrink-0"
+            onClick={() => { setSelectedCategory(cat.value); setPage(0); }}
+          >
+            {cat.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border bg-card overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={pagedContacts.length > 0 && selected.size === pagedContacts.length}
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+              <TableHead>업체명</TableHead>
+              <TableHead>대표자</TableHead>
+              <TableHead>이메일</TableHead>
+              <TableHead>업종</TableHead>
+              <TableHead>지역</TableHead>
+              <TableHead>등록일</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                  로딩 중...
+                </TableCell>
+              </TableRow>
+            ) : pagedContacts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                  연락처가 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              pagedContacts.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.has(c.id)}
+                      onCheckedChange={() => toggleSelect(c.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{c.company_name}</TableCell>
+                  <TableCell>{c.representative ?? "-"}</TableCell>
+                  <TableCell className="text-muted-foreground">{c.email}</TableCell>
+                  <TableCell><Badge variant="outline">{c.category}</Badge></TableCell>
+                  <TableCell>{c.region}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {format(new Date(c.created_at), "yyyy.MM.dd", { locale: ko })}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Button variant="ghost" size="icon" disabled={page === 0} onClick={() => setPage(page - 1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page + 1} / {totalPages}
+          </span>
+          <Button variant="ghost" size="icon" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Selection Bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card shadow-lg">
+          <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+            <span className="text-sm font-medium">
+              선택된 <span className="text-primary">{selected.size}개</span>
+            </span>
+            <Button onClick={() => navigate("/campaigns")}>
+              선택한 연락처로 캠페인 만들기
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
