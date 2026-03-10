@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          category: Database["public"]["Enums"]["contact_category"]
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          region: Database["public"]["Enums"]["contact_region"]
+          representative: string | null
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["contact_category"]
+          company_name: string
+          created_at?: string
+          email: string
+          id?: string
+          region: Database["public"]["Enums"]["contact_region"]
+          representative?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["contact_category"]
+          company_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          region?: Database["public"]["Enums"]["contact_region"]
+          representative?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_stats: {
         Row: {
           date: string
@@ -116,6 +149,23 @@ export type Database = {
     }
     Enums: {
       campaign_status: "draft" | "active" | "paused" | "completed"
+      contact_category:
+        | "음식점·카페"
+        | "쇼핑·유통"
+        | "IT·소프트웨어"
+        | "제조업"
+        | "서비스업"
+        | "의료·헬스"
+        | "교육"
+        | "부동산·건설"
+      contact_region:
+        | "서울"
+        | "경기"
+        | "부산"
+        | "인천"
+        | "대구"
+        | "광주"
+        | "대전"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -244,6 +294,17 @@ export const Constants = {
   public: {
     Enums: {
       campaign_status: ["draft", "active", "paused", "completed"],
+      contact_category: [
+        "음식점·카페",
+        "쇼핑·유통",
+        "IT·소프트웨어",
+        "제조업",
+        "서비스업",
+        "의료·헬스",
+        "교육",
+        "부동산·건설",
+      ],
+      contact_region: ["서울", "경기", "부산", "인천", "대구", "광주", "대전"],
     },
   },
 } as const
