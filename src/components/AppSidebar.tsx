@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: "대시보드", url: "/", icon: LayoutDashboard },
+  { title: "대시보드", url: "/dashboard", icon: LayoutDashboard },
   { title: "캠페인", url: "/campaigns", icon: Megaphone },
   { title: "연락처 DB", url: "/contacts", icon: Users },
   { title: "발송 도메인", url: "/domains", icon: Globe },
