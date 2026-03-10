@@ -58,7 +58,7 @@ const PaymentSuccess = () => {
         )}
         {done && (
           <>
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">구독이 완료되었습니다!</h2>
             <p className="text-muted-foreground mb-6">
               {searchParams.get("plan")?.toUpperCase()} 플랜이 활성화되었습니다.
