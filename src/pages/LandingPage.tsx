@@ -83,13 +83,39 @@ const LandingPage = () => {
             </Button>
           </div>
           <div className="relative">
-            <div className="rounded-xl overflow-hidden shadow-2xl border">
-              <img
-                src={dashboardMockup}
-                alt="MailPro 대시보드 미리보기"
-                className="w-full"
-                loading="lazy"
-              />
+            <div className="rounded-xl overflow-hidden shadow-2xl border bg-[#1a1a2e] p-5">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {[
+                  { label: "총 발송", value: "1,250통", icon: Mail, color: "text-blue-400" },
+                  { label: "열람률", value: "38.4%", icon: Eye, color: "text-emerald-400" },
+                  { label: "답장률", value: "7.2%", icon: MessageSquare, color: "text-amber-400" },
+                  { label: "활성 캠페인", value: "5개", icon: Megaphone, color: "text-purple-400" },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-[#16213e] rounded-lg p-3 border border-white/5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                      <span className="text-[11px] text-gray-400">{stat.label}</span>
+                    </div>
+                    <p className="text-xl font-bold text-white">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-[#16213e] rounded-lg p-4 border border-white/5">
+                <p className="text-[11px] text-gray-400 mb-3">주간 발송 현황</p>
+                <div className="flex items-end gap-2 h-24">
+                  {[40, 65, 55, 80, 70, 90, 60].map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        className="w-full rounded-sm bg-gradient-to-t from-blue-600 to-blue-400"
+                        style={{ height: `${h}%` }}
+                      />
+                      <span className="text-[9px] text-gray-500">
+                        {["월", "화", "수", "목", "금", "토", "일"][i]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
