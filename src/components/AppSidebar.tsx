@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
