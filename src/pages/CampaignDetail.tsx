@@ -396,6 +396,7 @@ const CampaignDetail = () => {
                   <TableHead>업체명</TableHead>
                   <TableHead>이메일</TableHead>
                   <TableHead>발송시간</TableHead>
+                  <TableHead>단계</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead>열람</TableHead>
                 </TableRow>
