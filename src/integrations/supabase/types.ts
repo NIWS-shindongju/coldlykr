@@ -212,6 +212,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_warmups: {
+        Row: {
+          created_at: string
+          current_day: number
+          duration_weeks: number
+          email: string
+          id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_day?: number
+          duration_weeks?: number
+          email: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_day?: number
+          duration_weeks?: number
+          email?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_history: {
         Row: {
           amount: number

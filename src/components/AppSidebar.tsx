@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ const menuItems = [
   { title: "캠페인", url: "/campaigns", icon: Megaphone },
   { title: "연락처 DB", url: "/contacts", icon: Users },
   { title: "발송 도메인", url: "/domains", icon: Globe },
+  { title: "이메일 워밍업", url: "/warmup", icon: Flame },
   { title: "요금제", url: "/pricing", icon: CreditCard },
   { title: "설정", url: "/settings", icon: Settings },
 ];
