@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
             <Route path="/campaigns" element={<ProtectedLayout><Campaigns /></ProtectedLayout>} />
             <Route path="/campaigns/new" element={<ProtectedLayout><CampaignCreate /></ProtectedLayout>} />
+            <Route path="/campaigns/:id" element={<ProtectedLayout><CampaignDetail /></ProtectedLayout>} />
             <Route path="/contacts" element={<ProtectedLayout><Contacts /></ProtectedLayout>} />
             <Route path="/domains" element={<ProtectedLayout><Domains /></ProtectedLayout>} />
             <Route path="/pricing" element={<ProtectedLayout><Pricing /></ProtectedLayout>} />
