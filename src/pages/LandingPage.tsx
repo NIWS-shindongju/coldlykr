@@ -9,7 +9,7 @@ import qudbLogo from "@/assets/qudb-logo.png";
 const features = [
   {
     icon: Database,
-    title: "500만 기업 DB 내장",
+    title: "1,000만+ 기업 DB 내장",
     desc: "업종, 지역, 규모별로 정확하게 필터링된 한국 기업 데이터베이스를 바로 활용하세요.",
   },
   {
