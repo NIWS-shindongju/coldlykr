@@ -53,6 +53,7 @@ const App = () => (
             <Route path="/domains" element={<ProtectedLayout><Domains /></ProtectedLayout>} />
             <Route path="/pricing" element={<ProtectedLayout><Pricing /></ProtectedLayout>} />
             <Route path="/settings" element={<ProtectedLayout><SettingsPage /></ProtectedLayout>} />
+            <Route path="/warmup" element={<ProtectedLayout><WarmupPage /></ProtectedLayout>} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/fail" element={<PaymentFail />} />
             <Route path="*" element={<NotFound />} />
