@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Database, Send, BarChart3, Mail, Eye, MessageSquare, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import qudbLogo from "@/assets/qudb-logo.png";
 
 const features = [
   {
@@ -190,8 +189,9 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-6 flex flex-col items-center text-center gap-4">
           <Badge variant="outline" className="text-xs font-medium px-3 py-1">큐디비 공식 파트너 서비스</Badge>
           <div className="flex items-center gap-3">
-            <img src={qudbLogo} alt="큐디비 로고" className="h-10 w-10 object-contain" />
+            <span className="bg-[#2563EB] text-white font-bold text-sm px-2.5 py-1.5 rounded-lg">큐DB</span>
             <span className="text-lg font-semibold">데이터 제공 파트너: 큐디비</span>
+            <span className="text-sm text-muted-foreground">공식 데이터 파트너</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-md">
             큐디비의 1,000만건 이상 한국 기업 데이터베이스를 기반으로 정확한 타겟 마케팅이 가능합니다.
@@ -203,8 +203,8 @@ const LandingPage = () => {
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <img src={qudbLogo} alt="큐디비" className="h-5 w-5 object-contain" />
-            <span>데이터 제공: 큐디비</span>
+            <span className="bg-[#2563EB] text-white font-bold text-[10px] px-1.5 py-1 rounded">큐DB</span>
+            <span>공식 데이터 파트너</span>
           </div>
           <div className="flex gap-6">
             <a href="/terms" className="hover:text-foreground transition-colors">
