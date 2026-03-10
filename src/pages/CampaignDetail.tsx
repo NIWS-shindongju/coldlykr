@@ -94,14 +94,19 @@ const CampaignDetail = () => {
     return () => { supabase.removeChannel(channel); };
   }, [id, refetchContacts, refetchCampaign]);
 
-  // Stats
+  // Stats (including sequence breakdown)
   const stats = useMemo(() => {
     const s = { total: allContacts.length, pending: 0, sent: 0, opened: 0, clicked: 0, replied: 0, bounced: 0 };
+    const seq = { step1: 0, step2: 0, step3: 0 };
     allContacts.forEach((c: any) => {
       const status = c.status as string;
       if (status in s && status !== "total") (s as any)[status]++;
+      const step = c.sequence_step ?? 1;
+      if (step === 1) seq.step1++;
+      else if (step === 2) seq.step2++;
+      else if (step === 3) seq.step3++;
     });
-    return s;
+    return { ...s, seq };
   }, [allContacts]);
 
   const pct = (n: number) => stats.total > 0 ? ((n / stats.total) * 100).toFixed(1) : "0.0";
