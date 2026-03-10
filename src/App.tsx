@@ -13,6 +13,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
+import CampaignCreate from "./pages/CampaignCreate";
 import Contacts from "./pages/Contacts";
 import Domains from "./pages/Domains";
 import Pricing from "./pages/Pricing";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/dashboard" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
             <Route path="/campaigns" element={<ProtectedLayout><Campaigns /></ProtectedLayout>} />
+            <Route path="/campaigns/new" element={<ProtectedLayout><CampaignCreate /></ProtectedLayout>} />
             <Route path="/contacts" element={<ProtectedLayout><Contacts /></ProtectedLayout>} />
             <Route path="/domains" element={<ProtectedLayout><Domains /></ProtectedLayout>} />
             <Route path="/pricing" element={<ProtectedLayout><Pricing /></ProtectedLayout>} />
