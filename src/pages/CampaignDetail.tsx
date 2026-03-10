@@ -404,7 +404,7 @@ const CampaignDetail = () => {
               <TableBody>
                 {filteredContacts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       결과가 없습니다.
                     </TableCell>
                   </TableRow>
