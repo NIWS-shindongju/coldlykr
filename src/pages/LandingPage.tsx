@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Check, Database, Send, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dashboardMockup from "@/assets/dashboard-mockup.png";
+import qudbLogo from "@/assets/qudb-logo.png";
 
 const features = [
   {
