@@ -23,6 +23,7 @@ export type Database = {
           id: string
           opened_at: string | null
           sent_at: string | null
+          sequence_step: number
           status: string
           user_id: string
         }
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           opened_at?: string | null
           sent_at?: string | null
+          sequence_step?: number
           status?: string
           user_id: string
         }
@@ -45,6 +47,7 @@ export type Database = {
           id?: string
           opened_at?: string | null
           sent_at?: string | null
+          sequence_step?: number
           status?: string
           user_id?: string
         }
@@ -78,12 +81,19 @@ export type Database = {
           send_interval: number | null
           sender_email: string | null
           sender_name: string | null
+          sequence_2_body: string | null
+          sequence_2_days: number | null
+          sequence_2_subject: string | null
+          sequence_3_body: string | null
+          sequence_3_days: number | null
+          sequence_3_subject: string | null
           status: Database["public"]["Enums"]["campaign_status"]
           subject: string | null
           total_opened: number
           total_replied: number
           total_sent: number
           updated_at: string
+          use_sequence: boolean
           user_id: string
         }
         Insert: {
@@ -98,12 +108,19 @@ export type Database = {
           send_interval?: number | null
           sender_email?: string | null
           sender_name?: string | null
+          sequence_2_body?: string | null
+          sequence_2_days?: number | null
+          sequence_2_subject?: string | null
+          sequence_3_body?: string | null
+          sequence_3_days?: number | null
+          sequence_3_subject?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           subject?: string | null
           total_opened?: number
           total_replied?: number
           total_sent?: number
           updated_at?: string
+          use_sequence?: boolean
           user_id: string
         }
         Update: {
@@ -118,12 +135,19 @@ export type Database = {
           send_interval?: number | null
           sender_email?: string | null
           sender_name?: string | null
+          sequence_2_body?: string | null
+          sequence_2_days?: number | null
+          sequence_2_subject?: string | null
+          sequence_3_body?: string | null
+          sequence_3_days?: number | null
+          sequence_3_subject?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           subject?: string | null
           total_opened?: number
           total_replied?: number
           total_sent?: number
           updated_at?: string
+          use_sequence?: boolean
           user_id?: string
         }
         Relationships: []

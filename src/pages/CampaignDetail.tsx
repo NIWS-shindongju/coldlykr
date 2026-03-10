@@ -94,14 +94,19 @@ const CampaignDetail = () => {
     return () => { supabase.removeChannel(channel); };
   }, [id, refetchContacts, refetchCampaign]);
 
-  // Stats
+  // Stats (including sequence breakdown)
   const stats = useMemo(() => {
     const s = { total: allContacts.length, pending: 0, sent: 0, opened: 0, clicked: 0, replied: 0, bounced: 0 };
+    const seq = { step1: 0, step2: 0, step3: 0 };
     allContacts.forEach((c: any) => {
       const status = c.status as string;
       if (status in s && status !== "total") (s as any)[status]++;
+      const step = c.sequence_step ?? 1;
+      if (step === 1) seq.step1++;
+      else if (step === 2) seq.step2++;
+      else if (step === 3) seq.step3++;
     });
-    return s;
+    return { ...s, seq };
   }, [allContacts]);
 
   const pct = (n: number) => stats.total > 0 ? ((n / stats.total) * 100).toFixed(1) : "0.0";
@@ -249,6 +254,35 @@ const CampaignDetail = () => {
         <SummaryCard icon={<AlertCircle className="h-5 w-5 text-destructive" />} label="반송" count={stats.bounced} pct={pct(stats.bounced)} />
       </div>
 
+      {/* Sequence Stats */}
+      {campaign?.use_sequence && (
+        <Card>
+          <CardContent className="pt-5 pb-4 px-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Send className="h-4 w-4 text-muted-foreground" />시퀀스 현황
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">1차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step1}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">2차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step2}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-muted/50">
+                <Badge variant="outline" className="mb-1">3차</Badge>
+                <p className="text-xl font-bold">{stats.seq.step3}</p>
+                <p className="text-xs text-muted-foreground">발송</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -363,6 +397,7 @@ const CampaignDetail = () => {
                   <TableHead>업체명</TableHead>
                   <TableHead>이메일</TableHead>
                   <TableHead>발송시간</TableHead>
+                  <TableHead>단계</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead>열람</TableHead>
                 </TableRow>
@@ -370,7 +405,7 @@ const CampaignDetail = () => {
               <TableBody>
                 {filteredContacts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       결과가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -384,6 +419,9 @@ const CampaignDetail = () => {
                         <TableCell className="text-muted-foreground text-sm">{contact?.email ?? "-"}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {cc.sent_at ? format(new Date(cc.sent_at), "MM.dd HH:mm", { locale: ko }) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{cc.sequence_step ?? 1}차</Badge>
                         </TableCell>
                         <TableCell>
                           <span className={cn("inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium", cfg.badgeClass)}>
