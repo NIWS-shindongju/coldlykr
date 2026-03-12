@@ -51,7 +51,7 @@ const LandingPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-xl font-bold text-primary tracking-tight">MailPro</span>
+          <span className="text-xl font-bold text-primary tracking-tight">Coldly</span>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/login")}>
               로그인
@@ -66,16 +66,14 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-              한국 기업 1,000만곳에
+              한국 B2B 영업의 시작
               <br />
               콜드메일을 자동으로
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              업종별 기업 DB 내장,
+              업종별 기업 DB 직접 선택, 자동 발송,
               <br />
-              자동 발송, 성과 추적까지
-              <br />
-              한 번에 해결하세요
+              성과 분석까지 한 번에
             </p>
             <Button size="lg" className="text-base px-8 h-12" onClick={() => navigate("/signup")}>
               무료로 시작하기
@@ -123,7 +121,7 @@ const LandingPage = () => {
       {/* Features */}
       <section className="py-20 bg-card">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">왜 MailPro인가요?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">왜 Coldly인가요?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((f) => (
               <Card key={f.title} className="p-6 text-center">
