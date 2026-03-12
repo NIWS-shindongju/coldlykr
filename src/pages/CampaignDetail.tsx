@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -23,12 +24,17 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft, Play, Square, Send, MailOpen, AlertCircle, Clock, CheckCircle2,
-  MousePointerClick, MessageSquare, Download, CalendarIcon, BarChart3,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  ArrowLeft, Play, Pause, Trash2, Square, Send, MailOpen, AlertCircle, Clock, CheckCircle2,
+  MousePointerClick, MessageSquare, Download, CalendarIcon, BarChart3, ChevronDown, Mail,
+  User, Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Status config with semantic colors
 const STATUS_CONFIG: Record<string, { label: string; dotClass: string; badgeClass: string }> = {
   pending: { label: "대기", dotClass: "bg-muted-foreground", badgeClass: "bg-muted text-muted-foreground" },
   sent: { label: "발송완료", dotClass: "bg-muted-foreground", badgeClass: "bg-secondary text-secondary-foreground" },
@@ -38,21 +44,30 @@ const STATUS_CONFIG: Record<string, { label: string; dotClass: string; badgeClas
   bounced: { label: "반송", dotClass: "bg-destructive", badgeClass: "bg-destructive/10 text-destructive" },
 };
 
-const campaignStatusLabels: Record<string, { label: string; icon: React.ReactNode }> = {
-  draft: { label: "대기", icon: <Clock className="h-4 w-4" /> },
-  active: { label: "발송중", icon: <Send className="h-4 w-4 animate-pulse" /> },
-  paused: { label: "일시정지", icon: <Square className="h-4 w-4" /> },
-  completed: { label: "완료", icon: <CheckCircle2 className="h-4 w-4" /> },
+const CAMPAIGN_STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
+  draft: { label: "초안", variant: "secondary" },
+  active: { label: "진행중", variant: "default" },
+  paused: { label: "일시정지", variant: "outline" },
+  completed: { label: "완료", variant: "secondary" },
 };
+
+const RECIPIENT_TABS: { label: string; value: string }[] = [
+  { label: "전체", value: "all" },
+  { label: "대기", value: "pending" },
+  { label: "발송완료", value: "sent" },
+  { label: "열람", value: "opened" },
+  { label: "답장", value: "replied" },
+  { label: "반송", value: "bounced" },
+];
 
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isSending, setIsSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(subDays(new Date(), 30));
-  const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
+  const [bodyOpen, setBodyOpen] = useState(false);
 
   // Campaign data
   const { data: campaign, refetch: refetchCampaign } = useQuery({
@@ -94,24 +109,20 @@ const CampaignDetail = () => {
     return () => { supabase.removeChannel(channel); };
   }, [id, refetchContacts, refetchCampaign]);
 
-  // Stats (including sequence breakdown)
+  // Stats
   const stats = useMemo(() => {
     const s = { total: allContacts.length, pending: 0, sent: 0, opened: 0, clicked: 0, replied: 0, bounced: 0 };
-    const seq = { step1: 0, step2: 0, step3: 0 };
     allContacts.forEach((c: any) => {
       const status = c.status as string;
       if (status in s && status !== "total") (s as any)[status]++;
-      const step = c.sequence_step ?? 1;
-      if (step === 1) seq.step1++;
-      else if (step === 2) seq.step2++;
-      else if (step === 3) seq.step3++;
     });
-    return { ...s, seq };
+    return s;
   }, [allContacts]);
 
-  const pct = (n: number) => stats.total > 0 ? ((n / stats.total) * 100).toFixed(1) : "0.0";
+  const totalSent = stats.sent + stats.opened + stats.clicked + stats.replied;
+  const pct = (n: number) => totalSent > 0 ? ((n / totalSent) * 100).toFixed(1) : "0.0";
 
-  // Chart data: group by date
+  // Chart data
   const chartData = useMemo(() => {
     const map: Record<string, { date: string; sent: number; opened: number }> = {};
     allContacts.forEach((c: any) => {
@@ -119,14 +130,11 @@ const CampaignDetail = () => {
       const d = format(new Date(c.sent_at), "MM/dd");
       if (!map[d]) map[d] = { date: d, sent: 0, opened: 0 };
       map[d].sent++;
-      if (c.status === "opened" || c.status === "clicked" || c.status === "replied") {
-        map[d].opened++;
-      }
+      if (c.status === "opened" || c.status === "clicked" || c.status === "replied") map[d].opened++;
     });
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
   }, [allContacts]);
 
-  // Open rate trend
   const openRateData = useMemo(() => {
     return chartData.map((d) => ({
       date: d.date,
@@ -138,11 +146,9 @@ const CampaignDetail = () => {
   const filteredContacts = useMemo(() => {
     return allContacts.filter((c: any) => {
       if (statusFilter !== "all" && c.status !== statusFilter) return false;
-      if (dateFrom && c.sent_at && isBefore(new Date(c.sent_at), startOfDay(dateFrom))) return false;
-      if (dateTo && c.sent_at && isAfter(new Date(c.sent_at), endOfDay(dateTo))) return false;
       return true;
     });
-  }, [allContacts, statusFilter, dateFrom, dateTo]);
+  }, [allContacts, statusFilter]);
 
   // CSV Export
   const handleExport = () => {
@@ -157,7 +163,6 @@ const CampaignDetail = () => {
         c.opened_at ? format(new Date(c.opened_at), "yyyy-MM-dd HH:mm") : "",
       ].join(",");
     }).join("\n");
-
     const bom = "\uFEFF";
     const blob = new Blob([bom + header + rows], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -169,243 +174,276 @@ const CampaignDetail = () => {
     toast.success("CSV 파일이 다운로드되었습니다.");
   };
 
-  // Send actions
-  const handleStartSending = async () => {
-    if (!id || !user) return;
-    setIsSending(true);
-    try {
-      const res = await supabase.functions.invoke("send-campaign-emails", {
-        body: { campaign_id: id },
-      });
-      if (res.error) throw new Error(res.error.message);
-      const result = res.data;
-      if (result.success) {
-        toast.success(`${result.sent}건 발송 완료. ${result.remaining > 0 ? `${result.remaining}건 남음.` : "모든 발송 완료!"}`);
-      } else {
-        toast.error(result.error || "발송 오류");
+  // Status mutations
+  const updateStatus = async (status: "active" | "paused") => {
+    if (!id) return;
+    if (status === "active") {
+      setIsSending(true);
+      try {
+        const res = await supabase.functions.invoke("send-campaign-emails", {
+          body: { campaign_id: id },
+        });
+        if (res.error) throw new Error(res.error.message);
+        const result = res.data;
+        if (result.success) {
+          toast.success(`${result.sent}건 발송 완료. ${result.remaining > 0 ? `${result.remaining}건 남음.` : "모든 발송 완료!"}`);
+        } else {
+          toast.error(result.error || "발송 오류");
+        }
+      } catch (err: any) {
+        toast.error(err.message || "발송 오류");
+      } finally {
+        setIsSending(false);
       }
-    } catch (err: any) {
-      toast.error(err.message || "발송 오류");
-    } finally {
-      setIsSending(false);
-      refetchCampaign();
-      refetchContacts();
+    } else {
+      await supabase.from("campaigns").update({ status }).eq("id", id);
+      toast.info("캠페인이 일시정지되었습니다.");
     }
+    refetchCampaign();
+    refetchContacts();
   };
 
-  const handleCancel = async () => {
+  const deleteCampaign = async () => {
     if (!id) return;
-    await supabase.from("campaigns").update({ status: "paused" }).eq("id", id);
-    toast.info("캠페인 발송이 취소되었습니다.");
-    refetchCampaign();
+    await supabase.from("campaign_contacts").delete().eq("campaign_id", id);
+    const { error } = await supabase.from("campaigns").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("캠페인이 삭제되었습니다.");
+    navigate("/campaigns");
   };
 
   const completedCount = stats.sent + stats.opened + stats.clicked + stats.replied + stats.bounced;
   const progressPercent = stats.total > 0 ? (completedCount / stats.total) * 100 : 0;
-  const campaignStatus = campaignStatusLabels[campaign?.status ?? "draft"];
+  const cStatus = CAMPAIGN_STATUS_MAP[campaign?.status ?? "draft"];
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/campaigns")}>
+      {/* ── Header ── */}
+      <div className="flex items-start gap-3">
+        <Button variant="ghost" size="icon" className="mt-1" onClick={() => navigate("/campaigns")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{campaign?.name ?? "캠페인"}</h1>
-          <p className="text-sm text-muted-foreground">{campaign?.subject}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold truncate">{campaign?.name ?? "캠페인"}</h1>
+            <Badge variant={cStatus?.variant}>{cStatus?.label}</Badge>
+          </div>
+          {campaign?.subject && (
+            <p className="text-sm text-muted-foreground mt-0.5 truncate">{campaign.subject}</p>
+          )}
         </div>
-        <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1.5">
-          {campaignStatus?.icon}
-          {campaignStatus?.label}
-        </Badge>
+        <div className="flex items-center gap-2 shrink-0">
+          {campaign?.status === "active" ? (
+            <Button variant="outline" size="sm" onClick={() => updateStatus("paused")} className="gap-1.5">
+              <Pause className="h-3.5 w-3.5" />일시정지
+            </Button>
+          ) : (campaign?.status === "draft" || campaign?.status === "paused") ? (
+            <Button size="sm" onClick={() => updateStatus("active")} disabled={isSending} className="gap-1.5">
+              <Play className="h-3.5 w-3.5" />{isSending ? "발송 중..." : "시작"}
+            </Button>
+          ) : null}
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" title="삭제">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>캠페인 삭제</AlertDialogTitle>
+                <AlertDialogDescription>
+                  "{campaign?.name}" 캠페인과 모든 발송 기록을 삭제합니다. 이 작업은 되돌릴 수 없습니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={deleteCampaign}
+                >
+                  삭제
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
-      {/* Progress + Send Controls */}
+      {/* ── 핵심 지표 카드 4개 ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <MetricCard icon={<Send className="h-5 w-5 text-muted-foreground" />} label="총 발송" value={totalSent} sub={`/ ${stats.total}건`} />
+        <MetricCard icon={<MailOpen className="h-5 w-5 text-primary" />} label="열람률" value={`${pct(stats.opened + stats.clicked + stats.replied)}%`} sub={`${stats.opened + stats.clicked + stats.replied}건`} />
+        <MetricCard icon={<MessageSquare className="h-5 w-5 text-[hsl(var(--warning))]" />} label="답장률" value={`${pct(stats.replied)}%`} sub={`${stats.replied}건`} />
+        <MetricCard icon={<AlertCircle className="h-5 w-5 text-destructive" />} label="반송률" value={`${pct(stats.bounced)}%`} sub={`${stats.bounced}건`} />
+      </div>
+
+      {/* ── 발송 진행률 ── */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-5 pb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">발송 진행률</span>
             <span className="text-sm text-muted-foreground">{completedCount} / {stats.total}건</span>
           </div>
-          <Progress value={progressPercent} className="h-2.5 mb-4" />
-          <div className="flex gap-3">
-            {(campaign?.status === "draft" || campaign?.status === "paused") && stats.pending > 0 && (
-              <Button onClick={handleStartSending} disabled={isSending} size="sm" className="gap-2">
-                <Play className="h-3.5 w-3.5" />
-                {isSending ? "발송 중..." : campaign?.status === "paused" ? "재시작" : "발송 시작"}
-              </Button>
-            )}
-            {campaign?.status === "active" && (
-              <Button variant="destructive" onClick={handleCancel} size="sm" className="gap-2">
-                <Square className="h-3.5 w-3.5" />취소
-              </Button>
+          <Progress value={progressPercent} className="h-2.5" />
+        </CardContent>
+      </Card>
+
+      {/* ── 발송 설정 정보 ── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Settings2 className="h-4 w-4 text-muted-foreground" />발송 설정
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <InfoRow label="발송자 이름" value={campaign?.sender_name} />
+            <InfoRow label="발송자 이메일" value={campaign?.sender_email} />
+            <InfoRow label="이메일 제목" value={campaign?.subject} />
+            <InfoRow label="회신 이메일" value={campaign?.reply_email} />
+            <InfoRow label="하루 최대 발송" value={campaign?.max_per_day ? `${campaign.max_per_day}건` : undefined} />
+            <InfoRow label="발송 간격" value={campaign?.send_interval ? `${campaign.send_interval}초` : undefined} />
+            <InfoRow label="시퀀스 사용" value={campaign?.use_sequence ? "예" : "아니오"} />
+            {campaign?.use_sequence && (
+              <>
+                <InfoRow label="2차 메일" value={campaign.sequence_2_subject ? `${campaign.sequence_2_days}일 후 · ${campaign.sequence_2_subject}` : undefined} />
+                <InfoRow label="3차 메일" value={campaign.sequence_3_subject ? `${campaign.sequence_3_days}일 후 · ${campaign.sequence_3_subject}` : undefined} />
+              </>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <SummaryCard icon={<Send className="h-5 w-5 text-muted-foreground" />} label="총 발송" count={stats.sent + stats.opened + stats.clicked + stats.replied} pct={pct(stats.sent + stats.opened + stats.clicked + stats.replied)} />
-        <SummaryCard icon={<MailOpen className="h-5 w-5 text-primary" />} label="열람" count={stats.opened + stats.clicked + stats.replied} pct={pct(stats.opened + stats.clicked + stats.replied)} />
-        <SummaryCard icon={<MousePointerClick className="h-5 w-5 text-[hsl(var(--success))]" />} label="클릭" count={stats.clicked} pct={pct(stats.clicked)} />
-        <SummaryCard icon={<MessageSquare className="h-5 w-5 text-[hsl(var(--warning))]" />} label="답장" count={stats.replied} pct={pct(stats.replied)} />
-        <SummaryCard icon={<AlertCircle className="h-5 w-5 text-destructive" />} label="반송" count={stats.bounced} pct={pct(stats.bounced)} />
-      </div>
-
-      {/* Sequence Stats */}
-      {campaign?.use_sequence && (
-        <Card>
-          <CardContent className="pt-5 pb-4 px-4">
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <Send className="h-4 w-4 text-muted-foreground" />시퀀스 현황
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-lg bg-muted/50">
-                <Badge variant="outline" className="mb-1">1차</Badge>
-                <p className="text-xl font-bold">{stats.seq.step1}</p>
-                <p className="text-xs text-muted-foreground">발송</p>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-muted/50">
-                <Badge variant="outline" className="mb-1">2차</Badge>
-                <p className="text-xl font-bold">{stats.seq.step2}</p>
-                <p className="text-xs text-muted-foreground">발송</p>
-              </div>
-              <div className="text-center p-3 rounded-lg bg-muted/50">
-                <Badge variant="outline" className="mb-1">3차</Badge>
-                <p className="text-xl font-bold">{stats.seq.step3}</p>
-                <p className="text-xs text-muted-foreground">발송</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── 이메일 본문 미리보기 ── */}
+      {campaign?.body && (
+        <Collapsible open={bodyOpen} onOpenChange={setBodyOpen}>
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />이메일 본문 미리보기
+                  </CardTitle>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", bodyOpen && "rotate-180")} />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="rounded-lg border bg-background p-6">
+                  <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: campaign.body }} />
+                </div>
+                {campaign.use_sequence && campaign.sequence_2_body && (
+                  <div className="mt-4">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">2차 메일</p>
+                    <div className="rounded-lg border bg-background p-6">
+                      <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: campaign.sequence_2_body }} />
+                    </div>
+                  </div>
+                )}
+                {campaign.use_sequence && campaign.sequence_3_body && (
+                  <div className="mt-4">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">3차 메일</p>
+                    <div className="rounded-lg border bg-background p-6">
+                      <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: campaign.sequence_3_body }} />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
-
-      {/* Charts */}
+      {/* ── Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />날짜별 발송량
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4 text-muted-foreground" />날짜별 발송량</CardTitle></CardHeader>
           <CardContent>
             <div className="h-56">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip />
                     <Bar dataKey="sent" name="발송" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">데이터 없음</div>
-              )}
+              ) : <div className="flex items-center justify-center h-full text-muted-foreground text-sm">데이터 없음</div>}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <MailOpen className="h-4 w-4 text-muted-foreground" />열람률 추이
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><MailOpen className="h-4 w-4 text-muted-foreground" />열람률 추이</CardTitle></CardHeader>
           <CardContent>
             <div className="h-56">
               {openRateData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={openRateData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-muted-foreground" />
-                    <YAxis tick={{ fontSize: 12 }} unit="%" className="text-muted-foreground" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} unit="%" />
                     <Tooltip formatter={(v: number) => [`${v}%`, "열람률"]} />
-                    <Line type="monotone" dataKey="rate" stroke="hsl(var(--success))" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="rate" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">데이터 없음</div>
-              )}
+              ) : <div className="flex items-center justify-center h-full text-muted-foreground text-sm">데이터 없음</div>}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters + Export */}
+      {/* ── 수신자 목록 ── */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <CardTitle className="text-lg">수신자 상세</CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Status filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[130px] h-9">
-                  <SelectValue placeholder="상태" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">전체 상태</SelectItem>
-                  {Object.entries(STATUS_CONFIG).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Date from */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !dateFrom && "text-muted-foreground")}>
-                    <CalendarIcon className="h-3.5 w-3.5" />
-                    {dateFrom ? format(dateFrom, "MM.dd", { locale: ko }) : "시작일"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
-
-              <span className="text-xs text-muted-foreground">~</span>
-
-              {/* Date to */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn("gap-1.5 text-xs", !dateTo && "text-muted-foreground")}>
-                    <CalendarIcon className="h-3.5 w-3.5" />
-                    {dateTo ? format(dateTo, "MM.dd", { locale: ko }) : "종료일"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={dateTo} onSelect={setDateTo} className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
-
-              <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
-                <Download className="h-3.5 w-3.5" />CSV
-              </Button>
-            </div>
+            <CardTitle className="text-lg">수신자 목록</CardTitle>
+            <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+              <Download className="h-3.5 w-3.5" />CSV 내보내기
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
+          {/* Status filter tabs */}
+          <div className="flex gap-1 overflow-x-auto pb-3 mb-3">
+            {RECIPIENT_TABS.map((tab) => {
+              const count = tab.value === "all"
+                ? allContacts.length
+                : allContacts.filter((c: any) => c.status === tab.value).length;
+              return (
+                <Button
+                  key={tab.value}
+                  size="sm"
+                  variant={statusFilter === tab.value ? "default" : "ghost"}
+                  className="shrink-0"
+                  onClick={() => setStatusFilter(tab.value)}
+                >
+                  {tab.label}
+                  <span className="ml-1 text-xs opacity-70">{count}</span>
+                </Button>
+              );
+            })}
+          </div>
+
           <div className="rounded-lg border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>업체명</TableHead>
                   <TableHead>이메일</TableHead>
-                  <TableHead>발송시간</TableHead>
-                  <TableHead>단계</TableHead>
                   <TableHead>상태</TableHead>
-                  <TableHead>열람</TableHead>
+                  <TableHead>발송일시</TableHead>
+                  <TableHead>열람일시</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContacts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       결과가 없습니다.
                     </TableCell>
                   </TableRow>
@@ -417,17 +455,14 @@ const CampaignDetail = () => {
                       <TableRow key={cc.id}>
                         <TableCell className="font-medium">{contact?.company_name ?? "-"}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">{contact?.email ?? "-"}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {cc.sent_at ? format(new Date(cc.sent_at), "MM.dd HH:mm", { locale: ko }) : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{cc.sequence_step ?? 1}차</Badge>
-                        </TableCell>
                         <TableCell>
                           <span className={cn("inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium", cfg.badgeClass)}>
                             <span className={cn("h-1.5 w-1.5 rounded-full", cfg.dotClass)} />
                             {cfg.label}
                           </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {cc.sent_at ? format(new Date(cc.sent_at), "MM.dd HH:mm", { locale: ko }) : "-"}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
                           {cc.opened_at ? format(new Date(cc.opened_at), "MM.dd HH:mm", { locale: ko }) : "-"}
@@ -446,16 +481,25 @@ const CampaignDetail = () => {
   );
 };
 
-const SummaryCard = ({ icon, label, count, pct }: { icon: React.ReactNode; label: string; count: number; pct: string }) => (
+/* ── Sub-components ── */
+
+const MetricCard = ({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string | number; sub: string }) => (
   <Card>
     <CardContent className="pt-5 pb-4 px-4">
       <div className="flex items-center gap-2 mb-2">{icon}<span className="text-xs text-muted-foreground">{label}</span></div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold">{count.toLocaleString()}</span>
-        <span className="text-sm text-muted-foreground">{pct}%</span>
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-2xl font-bold">{typeof value === "number" ? value.toLocaleString() : value}</span>
+        <span className="text-sm text-muted-foreground">{sub}</span>
       </div>
     </CardContent>
   </Card>
+);
+
+const InfoRow = ({ label, value }: { label: string; value?: string | null }) => (
+  <div className="flex items-start gap-2">
+    <span className="text-muted-foreground shrink-0 w-28">{label}</span>
+    <span className="font-medium">{value || "-"}</span>
+  </div>
 );
 
 export default CampaignDetail;
