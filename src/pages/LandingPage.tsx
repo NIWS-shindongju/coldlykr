@@ -200,9 +200,12 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <span className="bg-[#2563EB] text-white font-bold text-[10px] px-1.5 py-1 rounded">큐DB</span>
-            <span>공식 데이터 파트너</span>
+          <div className="flex items-center gap-4">
+            <span>© 2026 Coldly. All rights reserved.</span>
+            <div className="flex items-center gap-2">
+              <span className="bg-[#2563EB] text-white font-bold text-[10px] px-1.5 py-1 rounded">큐DB</span>
+              <span>공식 데이터 파트너</span>
+            </div>
           </div>
           <div className="flex gap-6">
             <a href="/terms" className="hover:text-foreground transition-colors">

@@ -69,7 +69,7 @@ const SignupPage = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <Link to="/" className="text-2xl font-bold text-primary">MailPro</Link>
+          <Link to="/" className="text-2xl font-bold text-primary">Coldly</Link>
           <p className="mt-2 text-muted-foreground">무료로 시작하세요</p>
         </div>
 
