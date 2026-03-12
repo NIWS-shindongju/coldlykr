@@ -51,7 +51,7 @@ const LandingPage = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-xl font-bold text-primary tracking-tight">MailPro</span>
+          <span className="text-xl font-bold text-primary tracking-tight">Coldly</span>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/login")}>
               로그인
