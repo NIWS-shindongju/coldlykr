@@ -60,11 +60,13 @@ const PAGE_SIZE = 50;
 const Contacts = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
   const [selectedRegion, setSelectedRegion] = useState<Region | "all">("all");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ["contacts", user?.id, selectedCategory, selectedRegion, search],
