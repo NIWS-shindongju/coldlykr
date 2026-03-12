@@ -120,6 +120,7 @@ const Contacts = () => {
       "업체명": "company_name", "company_name": "company_name",
       "대표자": "representative", "representative": "representative",
       "이메일": "email", "email": "email",
+      "전화번호": "phone", "phone": "phone",
       "업종": "category", "category": "category",
       "지역": "region", "region": "region",
     };
