@@ -238,7 +238,6 @@ const Contacts = () => {
           <p className="text-xs text-muted-foreground text-right">{uploadProgress}%</p>
         </div>
       )}
-      </div>
 
       {/* Search + Region Filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
