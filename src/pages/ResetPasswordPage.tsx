@@ -53,7 +53,7 @@ const ResetPasswordPage = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <Link to="/" className="text-2xl font-bold text-primary">MailPro</Link>
+          <Link to="/" className="text-2xl font-bold text-primary">Coldly</Link>
           <p className="mt-2 text-muted-foreground">새 비밀번호 설정</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
