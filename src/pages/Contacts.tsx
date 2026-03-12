@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -17,6 +18,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import Papa from "papaparse";
 import type { Database } from "@/integrations/supabase/types";
 
 type ContactRow = Database["public"]["Tables"]["contacts"]["Row"];
@@ -46,16 +48,25 @@ const regions: { label: string; value: Region | "all" }[] = [
   { label: "대전", value: "대전" },
 ];
 
+const VALID_CATEGORIES = new Set<string>(categories.filter(c => c.value !== "all").map(c => c.value));
+const VALID_REGIONS = new Set<string>(regions.filter(r => r.value !== "all").map(r => r.value));
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const BATCH_SIZE = 100;
+
 const PAGE_SIZE = 50;
 
 const Contacts = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category | "all">("all");
   const [selectedRegion, setSelectedRegion] = useState<Region | "all">("all");
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ["contacts", user?.id, selectedCategory, selectedRegion, search],
@@ -103,15 +114,91 @@ const Contacts = () => {
     }
   };
 
+  const mapColumnName = (col: string): string => {
+    const c = col.trim().toLowerCase();
+    const map: Record<string, string> = {
+      "업체명": "company_name", "company_name": "company_name",
+      "대표자": "representative", "representative": "representative",
+      "이메일": "email", "email": "email",
+      "업종": "category", "category": "category",
+      "지역": "region", "region": "region",
+    };
+    return map[c] ?? c;
+  };
+
   const handleExcelUpload = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".csv,.xlsx,.xls";
+    input.accept = ".csv";
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      // CSV parsing placeholder
-      toast.info("CSV 파일 업로드 기능은 곧 지원됩니다.");
+      if (!file || !user) return;
+
+      setUploadProgress(0);
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const rows = results.data as Record<string, string>[];
+          const mapped = rows
+            .map((row) => {
+              const obj: Record<string, string> = {};
+              for (const [key, val] of Object.entries(row)) {
+                obj[mapColumnName(key)] = val?.trim() ?? "";
+              }
+              return obj;
+            })
+            .filter((r) => r.email && EMAIL_RE.test(r.email))
+            .filter((r) => r.company_name)
+            .filter((r) => VALID_CATEGORIES.has(r.category))
+            .filter((r) => VALID_REGIONS.has(r.region));
+
+          if (mapped.length === 0) {
+            toast.error("유효한 데이터가 없습니다. 컬럼명과 데이터를 확인해 주세요.");
+            setUploadProgress(null);
+            return;
+          }
+
+          let inserted = 0;
+          const totalBatches = Math.ceil(mapped.length / BATCH_SIZE);
+
+          for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
+            const batch = mapped.slice(i, i + BATCH_SIZE).map((r) => ({
+              user_id: user.id,
+              company_name: r.company_name,
+              representative: r.representative || null,
+              email: r.email,
+              category: r.category as Category,
+              region: r.region as Region,
+            }));
+
+            const { error } = await supabase
+              .from("contacts")
+              .upsert(batch, { onConflict: "user_id,email", ignoreDuplicates: false });
+
+            if (error) {
+              console.error("Batch insert error:", error);
+              toast.error(`업로드 중 오류: ${error.message}`);
+              setUploadProgress(null);
+              return;
+            }
+
+            inserted += batch.length;
+            const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+            setUploadProgress(Math.round((batchIndex / totalBatches) * 100));
+          }
+
+          setUploadProgress(100);
+          toast.success(`총 ${inserted}개 연락처가 추가되었습니다.`);
+          queryClient.invalidateQueries({ queryKey: ["contacts"] });
+          setTimeout(() => setUploadProgress(null), 1500);
+        },
+        error: (err) => {
+          toast.error(`파일 파싱 오류: ${err.message}`);
+          setUploadProgress(null);
+        },
+      });
     };
     input.click();
   };
@@ -138,11 +225,19 @@ const Contacts = () => {
           <Badge variant="secondary" className="text-sm">{totalCount.toLocaleString()}개</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExcelUpload}>
-            <Upload className="h-4 w-4 mr-2" />엑셀 업로드
+          <Button variant="outline" onClick={handleExcelUpload} disabled={uploadProgress !== null}>
+            <Upload className="h-4 w-4 mr-2" />
+            {uploadProgress !== null ? "업로드 중..." : "엑셀 업로드"}
           </Button>
         </div>
       </div>
+
+      {uploadProgress !== null && (
+        <div className="mb-4 space-y-1">
+          <Progress value={uploadProgress} className="h-2" />
+          <p className="text-xs text-muted-foreground text-right">{uploadProgress}%</p>
+        </div>
+      )}
 
       {/* Search + Region Filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
