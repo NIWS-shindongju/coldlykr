@@ -58,6 +58,8 @@ const App = () => (
             <Route path="/warmup" element={<ProtectedLayout><WarmupPage /></ProtectedLayout>} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/fail" element={<PaymentFail />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

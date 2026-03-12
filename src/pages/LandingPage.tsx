@@ -121,7 +121,7 @@ const LandingPage = () => {
       {/* Features */}
       <section className="py-20 bg-card">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">왜 MailPro인가요?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">왜 Coldly인가요?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {features.map((f) => (
               <Card key={f.title} className="p-6 text-center">
