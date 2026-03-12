@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -17,6 +18,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import Papa from "papaparse";
 import type { Database } from "@/integrations/supabase/types";
 
 type ContactRow = Database["public"]["Tables"]["contacts"]["Row"];
