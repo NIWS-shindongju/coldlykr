@@ -212,6 +212,42 @@ export type Database = {
         }
         Relationships: []
       }
+      domains: {
+        Row: {
+          created_at: string
+          dkim_configured: boolean
+          dmarc_configured: boolean
+          domain: string
+          id: string
+          spf_configured: boolean
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          dkim_configured?: boolean
+          dmarc_configured?: boolean
+          domain: string
+          id?: string
+          spf_configured?: boolean
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          dkim_configured?: boolean
+          dmarc_configured?: boolean
+          domain?: string
+          id?: string
+          spf_configured?: boolean
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       email_warmups: {
         Row: {
           created_at: string
