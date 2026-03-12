@@ -79,7 +79,7 @@ const LandingPage = () => {
               무료로 시작하기
             </Button>
           </div>
-          <div className="relative">
+          <div className="relative hidden lg:block">
             <div className="rounded-xl overflow-hidden shadow-2xl border bg-[#1a1a2e] p-5">
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {[

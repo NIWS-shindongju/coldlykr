@@ -280,8 +280,8 @@ const Contacts = () => {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-card overflow-x-auto">
+      {/* Desktop Table */}
+      <div className="hidden sm:block rounded-lg border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -334,6 +334,34 @@ const Contacts = () => {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="sm:hidden space-y-2">
+        {isLoading ? (
+          <p className="text-center py-12 text-muted-foreground">로딩 중...</p>
+        ) : pagedContacts.length === 0 ? (
+          <p className="text-center py-12 text-muted-foreground">연락처가 없습니다.</p>
+        ) : (
+          pagedContacts.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-lg border bg-card p-4 flex items-start gap-3"
+              onClick={() => toggleSelect(c.id)}
+            >
+              <Checkbox
+                checked={selected.has(c.id)}
+                onCheckedChange={() => toggleSelect(c.id)}
+                className="mt-0.5"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{c.company_name}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{c.email}</p>
+                <Badge variant="outline" className="mt-1.5 text-xs">{c.category}</Badge>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Pagination */}
