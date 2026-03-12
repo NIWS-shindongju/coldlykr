@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS contacts_user_id_email_unique ON public.contacts (user_id, email);
