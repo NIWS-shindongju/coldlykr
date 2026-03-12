@@ -66,16 +66,14 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6">
-              한국 기업 1,000만곳에
+              한국 B2B 영업의 시작
               <br />
               콜드메일을 자동으로
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              업종별 기업 DB 내장,
+              업종별 기업 DB 직접 선택, 자동 발송,
               <br />
-              자동 발송, 성과 추적까지
-              <br />
-              한 번에 해결하세요
+              성과 분석까지 한 번에
             </p>
             <Button size="lg" className="text-base px-8 h-12" onClick={() => navigate("/signup")}>
               무료로 시작하기
