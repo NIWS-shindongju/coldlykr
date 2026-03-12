@@ -225,10 +225,19 @@ const Contacts = () => {
           <Badge variant="secondary" className="text-sm">{totalCount.toLocaleString()}개</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExcelUpload}>
-            <Upload className="h-4 w-4 mr-2" />엑셀 업로드
+          <Button variant="outline" onClick={handleExcelUpload} disabled={uploadProgress !== null}>
+            <Upload className="h-4 w-4 mr-2" />
+            {uploadProgress !== null ? "업로드 중..." : "엑셀 업로드"}
           </Button>
         </div>
+      </div>
+
+      {uploadProgress !== null && (
+        <div className="mb-4 space-y-1">
+          <Progress value={uploadProgress} className="h-2" />
+          <p className="text-xs text-muted-foreground text-right">{uploadProgress}%</p>
+        </div>
+      )}
       </div>
 
       {/* Search + Region Filter */}
