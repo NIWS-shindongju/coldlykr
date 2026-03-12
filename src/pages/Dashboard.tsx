@@ -12,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, Eye, MessageSquare, Megaphone, Plus } from "lucide-react";
+import { Mail, Eye, MessageSquare, Megaphone, Plus, CheckCircle2, Circle, Flame, Users, Send, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, subDays } from "date-fns";
 import { ko } from "date-fns/locale";
 import { SendsChart } from "@/components/dashboard/SendsChart";
 import { OpensChart } from "@/components/dashboard/OpensChart";
+import { cn } from "@/lib/utils";
 
 const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "초안", variant: "secondary" },
