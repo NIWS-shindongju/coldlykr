@@ -114,15 +114,91 @@ const Contacts = () => {
     }
   };
 
+  const mapColumnName = (col: string): string => {
+    const c = col.trim().toLowerCase();
+    const map: Record<string, string> = {
+      "업체명": "company_name", "company_name": "company_name",
+      "대표자": "representative", "representative": "representative",
+      "이메일": "email", "email": "email",
+      "업종": "category", "category": "category",
+      "지역": "region", "region": "region",
+    };
+    return map[c] ?? c;
+  };
+
   const handleExcelUpload = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".csv,.xlsx,.xls";
+    input.accept = ".csv";
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      // CSV parsing placeholder
-      toast.info("CSV 파일 업로드 기능은 곧 지원됩니다.");
+      if (!file || !user) return;
+
+      setUploadProgress(0);
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          const rows = results.data as Record<string, string>[];
+          const mapped = rows
+            .map((row) => {
+              const obj: Record<string, string> = {};
+              for (const [key, val] of Object.entries(row)) {
+                obj[mapColumnName(key)] = val?.trim() ?? "";
+              }
+              return obj;
+            })
+            .filter((r) => r.email && EMAIL_RE.test(r.email))
+            .filter((r) => r.company_name)
+            .filter((r) => VALID_CATEGORIES.has(r.category))
+            .filter((r) => VALID_REGIONS.has(r.region));
+
+          if (mapped.length === 0) {
+            toast.error("유효한 데이터가 없습니다. 컬럼명과 데이터를 확인해 주세요.");
+            setUploadProgress(null);
+            return;
+          }
+
+          let inserted = 0;
+          const totalBatches = Math.ceil(mapped.length / BATCH_SIZE);
+
+          for (let i = 0; i < mapped.length; i += BATCH_SIZE) {
+            const batch = mapped.slice(i, i + BATCH_SIZE).map((r) => ({
+              user_id: user.id,
+              company_name: r.company_name,
+              representative: r.representative || null,
+              email: r.email,
+              category: r.category as Category,
+              region: r.region as Region,
+            }));
+
+            const { error } = await supabase
+              .from("contacts")
+              .upsert(batch, { onConflict: "user_id,email", ignoreDuplicates: false });
+
+            if (error) {
+              console.error("Batch insert error:", error);
+              toast.error(`업로드 중 오류: ${error.message}`);
+              setUploadProgress(null);
+              return;
+            }
+
+            inserted += batch.length;
+            const batchIndex = Math.floor(i / BATCH_SIZE) + 1;
+            setUploadProgress(Math.round((batchIndex / totalBatches) * 100));
+          }
+
+          setUploadProgress(100);
+          toast.success(`총 ${inserted}개 연락처가 추가되었습니다.`);
+          queryClient.invalidateQueries({ queryKey: ["contacts"] });
+          setTimeout(() => setUploadProgress(null), 1500);
+        },
+        error: (err) => {
+          toast.error(`파일 파싱 오류: ${err.message}`);
+          setUploadProgress(null);
+        },
+      });
     };
     input.click();
   };
