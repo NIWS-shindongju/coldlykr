@@ -110,9 +110,79 @@ const Dashboard = () => {
     { label: "활성 캠페인", value: activeCampaigns.toString(), icon: Megaphone },
   ];
 
+  // Onboarding steps
+  const hasWarmup = warmupCount > 0;
+  const hasContacts = contactCount > 0;
+  const hasCampaigns = campaigns.length > 0;
+  const hasSentCampaign = campaigns.some((c) => c.total_sent > 0);
+
+  const onboardingSteps = [
+    { label: "회원가입 완료", done: true, icon: CheckCircle2, onClick: undefined },
+    { label: "이메일 워밍업 설정", done: hasWarmup, icon: Flame, onClick: () => navigate("/warmup") },
+    { label: "연락처 DB 업로드", done: hasContacts, icon: Users, onClick: () => navigate("/contacts") },
+    { label: "첫 캠페인 만들기", done: hasCampaigns, icon: Send, onClick: () => navigate("/campaigns/new") },
+    { label: "발송 결과 확인", done: hasSentCampaign, icon: BarChart3, onClick: hasCampaigns ? () => navigate("/campaigns") : undefined },
+  ];
+
+  const allDone = onboardingSteps.every((s) => s.done);
+  const showOnboarding = !allDone && campaigns.length === 0 && contactCount === 0;
+  const completedSteps = onboardingSteps.filter((s) => s.done).length;
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">대시보드</h1>
+
+      {/* Onboarding */}
+      {showOnboarding && (
+        <Card className="p-6 mb-8 border-primary/20 bg-primary/5">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold">🚀 시작 가이드</h2>
+            <p className="text-sm text-muted-foreground mt-1">3단계만 따라하면 첫 콜드메일을 보낼 수 있어요</p>
+            <div className="flex items-center gap-2 mt-3">
+              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  style={{ width: `${(completedSteps / onboardingSteps.length) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">{completedSteps}/{onboardingSteps.length}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {onboardingSteps.map((step) => {
+              const disabled = !step.done && !step.onClick;
+              return (
+                <button
+                  key={step.label}
+                  onClick={step.onClick}
+                  disabled={disabled}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
+                    step.done
+                      ? "bg-background"
+                      : disabled
+                        ? "bg-muted/50 opacity-50 cursor-not-allowed"
+                        : "bg-background hover:bg-accent cursor-pointer"
+                  )}
+                >
+                  {step.done ? (
+                    <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-muted-foreground shrink-0" />
+                  )}
+                  <step.icon className={cn("h-4 w-4 shrink-0", step.done ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-sm font-medium", step.done && "line-through text-muted-foreground")}>
+                    {step.label}
+                  </span>
+                  {!step.done && step.onClick && (
+                    <span className="ml-auto text-xs text-primary font-medium">시작 →</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
