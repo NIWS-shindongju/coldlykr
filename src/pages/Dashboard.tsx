@@ -45,6 +45,30 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
+  const { data: contactCount = 0 } = useQuery({
+    queryKey: ["contacts-count", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("contacts")
+        .select("*", { count: "exact", head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: warmupCount = 0 } = useQuery({
+    queryKey: ["warmup-count", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("email_warmups")
+        .select("*", { count: "exact", head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+  });
+
   const { data: dailyStats = [] } = useQuery({
     queryKey: ["daily_stats", user?.id],
     queryFn: async () => {
