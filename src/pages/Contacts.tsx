@@ -48,6 +48,13 @@ const regions: { label: string; value: Region | "all" }[] = [
   { label: "대전", value: "대전" },
 ];
 
+const VALID_CATEGORIES = new Set<string>(categories.filter(c => c.value !== "all").map(c => c.value));
+const VALID_REGIONS = new Set<string>(regions.filter(r => r.value !== "all").map(r => r.value));
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const BATCH_SIZE = 100;
+
 const PAGE_SIZE = 50;
 
 const Contacts = () => {
