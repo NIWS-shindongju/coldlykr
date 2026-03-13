@@ -48,20 +48,20 @@ const SignupPage = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name: fullName, company_name: companyName },
-        emailRedirectTo: window.location.origin,
-      },
+      options: { data: { full_name: fullName, company_name: companyName } },
     });
-    setLoading(false);
+    if (signUpError) { toast.error(signUpError.message); setLoading(false); return; }
 
-    if (error) {
-      toast.error(error.message);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (signInError) {
+      toast.info("가입 완료! 이메일 인증 후 로그인해주세요.");
+      navigate("/login");
     } else {
-      toast.success("가입이 완료되었습니다!");
+      toast.success("환영합니다!");
       navigate("/dashboard");
     }
   };
