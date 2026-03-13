@@ -304,7 +304,16 @@ const CampaignCreate = () => {
                   </AlertDescription>
                 </Alert>
               )}
-              <div className="space-y-2">
+              {!hasVerifiedDomain && (
+                <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+                  <AlertDescription className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-amber-800 dark:text-amber-200">⚠️ 발송 도메인이 설정되지 않았습니다. 스팸으로 분류될 수 있습니다.</span>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/domains")}>
+                      도메인 설정하기
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
                 <Label htmlFor="campaign-name" className="flex items-center gap-2">
                   <Megaphone className="h-4 w-4 text-muted-foreground" />캠페인 이름
                 </Label>
