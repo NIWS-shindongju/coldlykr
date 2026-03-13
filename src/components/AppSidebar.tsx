@@ -1,6 +1,5 @@
 import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import qudbLogo from "@/assets/qudb-logo.png";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -78,12 +77,12 @@ export function AppSidebar() {
         {/* 큐디비 Partner Link */}
         <div className="mt-auto px-4 pb-4">
           <a
-            href="https://qudb.co.kr"
+            href="https://qdb.kr"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg border bg-sidebar-accent/50 p-2.5 hover:bg-sidebar-accent transition-colors"
           >
-            <img src={qudbLogo} alt="큐디비" className="h-5 w-5 object-contain shrink-0" />
+            <span className="h-5 w-5 flex items-center justify-center bg-[#2563EB] text-white font-bold text-[9px] rounded shrink-0">큐DB</span>
             {!collapsed && (
               <span className="text-xs font-medium text-sidebar-foreground">큐디비 구독하기</span>
             )}

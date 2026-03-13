@@ -213,7 +213,7 @@ const Contacts = () => {
           <p className="text-xs text-muted-foreground mt-0.5">큐디비에서 1,000만건+ 한국 기업 데이터를 직접 구독하세요.</p>
         </div>
         <Button size="sm" variant="outline" asChild>
-          <a href="https://qudb.co.kr" target="_blank" rel="noopener noreferrer">
+          <a href="https://qdb.kr" target="_blank" rel="noopener noreferrer">
             큐디비 직접 구독하기 →
           </a>
         </Button>
