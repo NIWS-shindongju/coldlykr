@@ -34,6 +34,7 @@ import {
   User, Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendChecklistModal } from "@/components/campaign/SendChecklistModal";
 
 const STATUS_CONFIG: Record<string, { label: string; dotClass: string; badgeClass: string }> = {
   pending: { label: "대기", dotClass: "bg-muted-foreground", badgeClass: "bg-muted text-muted-foreground" },
@@ -68,6 +69,7 @@ const CampaignDetail = () => {
   const [isSending, setIsSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
 
   // Campaign data
   const { data: campaign, refetch: refetchCampaign } = useQuery({
@@ -238,7 +240,7 @@ const CampaignDetail = () => {
               <Pause className="h-3.5 w-3.5" />일시정지
             </Button>
           ) : (campaign?.status === "draft" || campaign?.status === "paused") ? (
-            <Button size="sm" onClick={() => updateStatus("active")} disabled={isSending} className="gap-1.5">
+            <Button size="sm" onClick={() => setChecklistOpen(true)} disabled={isSending} className="gap-1.5">
               <Play className="h-3.5 w-3.5" />{isSending ? "발송 중..." : "시작"}
             </Button>
           ) : null}
@@ -477,6 +479,17 @@ const CampaignDetail = () => {
           <p className="text-xs text-muted-foreground mt-2">{filteredContacts.length}건 표시</p>
         </CardContent>
       </Card>
+      {/* ── 발송 전 체크리스트 모달 ── */}
+      {campaign && (
+        <SendChecklistModal
+          open={checklistOpen}
+          onOpenChange={setChecklistOpen}
+          campaign={campaign}
+          pendingCount={stats.pending}
+          onConfirm={() => { setChecklistOpen(false); updateStatus("active"); }}
+          isSending={isSending}
+        />
+      )}
     </div>
   );
 };
