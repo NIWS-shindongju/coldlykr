@@ -1,5 +1,7 @@
-import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -26,6 +28,17 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const displayEmail = user?.email
+    ? user.email.length > 12 ? user.email.slice(0, 12) + "…" : user.email
+    : "";
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r-0">
@@ -74,8 +87,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* User & Logout */}
+        <div className="mt-auto px-4 pb-2">
+          <div className="flex items-center gap-2 rounded-lg p-2.5">
+            {!collapsed && displayEmail && (
+              <span className="text-xs text-muted-foreground truncate flex-1">{displayEmail}</span>
+            )}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              title="로그아웃"
+            >
+              <LogOut className="h-4 w-4" />
+              {!collapsed && <span>로그아웃</span>}
+            </button>
+          </div>
+        </div>
+
         {/* 큐디비 Partner Link */}
-        <div className="mt-auto px-4 pb-4">
+        <div className="px-4 pb-4">
           <a
             href="https://qdb.kr"
             target="_blank"
