@@ -39,6 +39,7 @@ const plans = [
 
 const Pricing = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [loading, setLoading] = useState<string | null>(null);
 
