@@ -84,6 +84,8 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
+  const hasError = campaignsError || contactsError || warmupError || statsError;
+
   const totalSent = campaigns.reduce((s, c) => s + c.total_sent, 0);
   const totalOpened = campaigns.reduce((s, c) => s + c.total_opened, 0);
   const totalReplied = campaigns.reduce((s, c) => s + c.total_replied, 0);
