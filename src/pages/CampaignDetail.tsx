@@ -69,6 +69,7 @@ const CampaignDetail = () => {
   const [isSending, setIsSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
 
   // Campaign data
   const { data: campaign, refetch: refetchCampaign } = useQuery({
