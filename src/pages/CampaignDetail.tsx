@@ -645,6 +645,14 @@ const CampaignDetail = () => {
         </Card>
       </Collapsible>
 
+      {/* ── 테스트 발송 다이얼로그 ── */}
+      {campaign && (
+        <TestEmailDialog
+          open={testDialogOpen}
+          onOpenChange={setTestDialogOpen}
+          campaign={campaign}
+        />
+      )}
       {/* ── 발송 전 체크리스트 모달 ── */}
       {campaign && (
         <SendChecklistModal
