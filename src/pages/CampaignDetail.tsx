@@ -34,6 +34,7 @@ import {
   User, Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendChecklistModal } from "@/components/campaign/SendChecklistModal";
 
 const STATUS_CONFIG: Record<string, { label: string; dotClass: string; badgeClass: string }> = {
   pending: { label: "대기", dotClass: "bg-muted-foreground", badgeClass: "bg-muted text-muted-foreground" },
