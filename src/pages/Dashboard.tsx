@@ -31,7 +31,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: campaigns = [] } = useQuery({
+  const { data: campaigns = [], isError: campaignsError } = useQuery({
     queryKey: ["campaigns", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +45,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: contactCount = 0 } = useQuery({
+  const { data: contactCount = 0, isError: contactsError } = useQuery({
     queryKey: ["contacts-count", user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
