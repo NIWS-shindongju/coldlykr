@@ -387,7 +387,7 @@ const Contacts = () => {
             <span className="text-sm font-medium">
               선택된 <span className="text-primary">{selected.size}개</span>
             </span>
-            <Button onClick={() => navigate("/campaigns")}>
+            <Button onClick={() => navigate("/campaigns/new", { state: { selectedContactIds: Array.from(selected) } })}>
               선택한 연락처로 캠페인 만들기
             </Button>
           </div>

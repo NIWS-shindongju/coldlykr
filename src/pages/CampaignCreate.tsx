@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,7 +58,9 @@ interface SequenceEmail {
 const CampaignCreate = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
+  const location = useLocation();
+  const preselectedContactIds: string[] | null = (location.state as any)?.selectedContactIds ?? null;
+  const [currentStep, setCurrentStep] = useState(preselectedContactIds ? 2 : 0);
 
   // Step 1
   const [campaignName, setCampaignName] = useState("");
@@ -181,17 +183,24 @@ const CampaignCreate = () => {
     }
 
     // 2. Fetch matching contacts and create campaign_contacts
-    let contactQuery = supabase.from("contacts").select("id").limit(actualSendCount);
-    if (selectedCategories.size > 0) {
-      contactQuery = contactQuery.in("category", Array.from(selectedCategories));
-    }
-    if (selectedRegions.size > 0) {
-      contactQuery = contactQuery.in("region", Array.from(selectedRegions));
-    }
-    const { data: contactIds } = await contactQuery;
+    let contactIdList: { id: string }[] = [];
 
-    if (contactIds && contactIds.length > 0) {
-      const rows = contactIds.map((c) => ({
+    if (preselectedContactIds && preselectedContactIds.length > 0) {
+      contactIdList = preselectedContactIds.map((id) => ({ id }));
+    } else {
+      let contactQuery = supabase.from("contacts").select("id").limit(actualSendCount);
+      if (selectedCategories.size > 0) {
+        contactQuery = contactQuery.in("category", Array.from(selectedCategories));
+      }
+      if (selectedRegions.size > 0) {
+        contactQuery = contactQuery.in("region", Array.from(selectedRegions));
+      }
+      const { data } = await contactQuery;
+      contactIdList = data ?? [];
+    }
+
+    if (contactIdList.length > 0) {
+      const rows = contactIdList.map((c) => ({
         campaign_id: campaign.id,
         contact_id: c.id,
         user_id: user.id,
@@ -298,6 +307,23 @@ const CampaignCreate = () => {
         {/* Step 2: Recipients */}
         {currentStep === 1 && (
           <>
+            {preselectedContactIds ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">수신자 선택</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-primary/5">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-medium text-sm">연락처에서 직접 선택됨</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">선택된 연락처 <span className="text-primary font-semibold">{preselectedContactIds.length}개</span>로 발송합니다.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+            <>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">수신자 선택</CardTitle>
@@ -418,6 +444,8 @@ const CampaignCreate = () => {
                 )}
               </CardContent>
             </Card>
+            </>
+            )}
           </>
         )}
 
@@ -642,7 +670,9 @@ const CampaignCreate = () => {
                 <SummaryItem label="발송자" value={`${senderName} <${senderEmail}>`} />
                 <SummaryItem label="회신 이메일" value={replyEmail || senderEmail} />
                 <SummaryItem label="이메일 제목" value={subject} />
-                <SummaryItem label="수신자 수" value={`${actualSendCount}명`} />
+                <SummaryItem label="수신자 수" value={preselectedContactIds ? `${preselectedContactIds.length}명 (직접 선택)` : `${actualSendCount}명`} />
+                {!preselectedContactIds && (
+                  <>
                 <SummaryItem
                   label="카테고리"
                   value={selectedCategories.size > 0 ? Array.from(selectedCategories).join(", ") : "전체"}
@@ -651,6 +681,8 @@ const CampaignCreate = () => {
                   label="지역"
                   value={selectedRegions.size > 0 ? Array.from(selectedRegions).join(", ") : "전체"}
                 />
+                  </>
+                )}
                 <SummaryItem label="발송 시점" value={sendNow ? "즉시 발송" : scheduledDate ? `${format(scheduledDate, "yyyy.MM.dd", { locale: ko })} ${scheduledTime}` : "미정"} />
                 <SummaryItem label="하루 최대" value={`${maxPerDay[0]}통`} />
                 <SummaryItem label="발송 간격" value={INTERVALS.find((iv) => iv.value === interval)?.label ?? ""} />
