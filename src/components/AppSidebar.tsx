@@ -28,6 +28,17 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const displayEmail = user?.email
+    ? user.email.length > 12 ? user.email.slice(0, 12) + "…" : user.email
+    : "";
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r-0">
