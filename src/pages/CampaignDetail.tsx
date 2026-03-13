@@ -68,6 +68,7 @@ const CampaignDetail = () => {
   const [bodyOpen, setBodyOpen] = useState(false);
   const [errorLogOpen, setErrorLogOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const autoPausedRef = useRef(false);
   const autoCompletedRef = useRef(false);
 
