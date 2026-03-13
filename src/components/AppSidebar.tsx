@@ -82,7 +82,7 @@ export function AppSidebar() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg border bg-sidebar-accent/50 p-2.5 hover:bg-sidebar-accent transition-colors"
           >
-            <img src={qudbLogo} alt="큐디비" className="h-5 w-5 object-contain shrink-0" />
+            <span className="h-5 w-5 flex items-center justify-center bg-[#2563EB] text-white font-bold text-[9px] rounded shrink-0">큐DB</span>
             {!collapsed && (
               <span className="text-xs font-medium text-sidebar-foreground">큐디비 구독하기</span>
             )}
