@@ -330,7 +330,17 @@ const CampaignCreate = () => {
                 <Label htmlFor="sender-email" className="flex items-center gap-2">
                   <AtSign className="h-4 w-4 text-muted-foreground" />발송자 이메일
                 </Label>
-                <Input id="sender-email" type="email" placeholder="예: sales@company.com" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} />
+                <Input
+                  id="sender-email"
+                  type="email"
+                  placeholder="예: sales@company.com"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className={cn(senderEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail) && "border-destructive focus-visible:ring-destructive")}
+                />
+                {senderEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail) && (
+                  <p className="text-xs text-destructive">올바른 이메일 형식이 아닙니다</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="reply-email" className="flex items-center gap-2">
