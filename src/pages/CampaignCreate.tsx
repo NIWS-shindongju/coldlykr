@@ -59,6 +59,7 @@ interface SequenceEmail {
 
 const CampaignCreate = () => {
   const { user } = useAuth();
+  const { plan, isFree, planLimits, isLoading: planLoading } = useUserPlan();
   const navigate = useNavigate();
   const location = useLocation();
   const preselectedContactIds: string[] | null = (location.state as any)?.selectedContactIds ?? null;
