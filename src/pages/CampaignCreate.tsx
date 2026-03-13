@@ -95,6 +95,21 @@ const CampaignCreate = () => {
 
   const actualSendCount = sendCountOption === "custom" ? customSendCount : sendCountOption;
 
+  // Fetch verified domains
+  const { data: verifiedDomains = [] } = useQuery({
+    queryKey: ["verified-domains", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("domains")
+        .select("id")
+        .eq("verified", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+  const hasVerifiedDomain = verifiedDomains.length > 0;
+
   // Fetch matching contacts for preview
   const { data: previewContacts = [] } = useQuery({
     queryKey: ["campaign-contacts-preview", user?.id, Array.from(selectedCategories), Array.from(selectedRegions)],
