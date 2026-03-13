@@ -218,7 +218,7 @@ const CampaignCreate = () => {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0: return campaignName.trim() && senderName.trim() && senderEmail.trim();
+      case 0: return !isFree && campaignName.trim() && senderName.trim() && senderEmail.trim();
       case 1: return true;
       case 2: return subject.trim() && body.trim();
       case 3: return sendNow || !!scheduledDate;
