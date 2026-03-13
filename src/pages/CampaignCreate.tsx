@@ -95,6 +95,21 @@ const CampaignCreate = () => {
 
   const actualSendCount = sendCountOption === "custom" ? customSendCount : sendCountOption;
 
+  // Fetch verified domains
+  const { data: verifiedDomains = [] } = useQuery({
+    queryKey: ["verified-domains", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("domains")
+        .select("id")
+        .eq("verified", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+  const hasVerifiedDomain = verifiedDomains.length > 0;
+
   // Fetch matching contacts for preview
   const { data: previewContacts = [] } = useQuery({
     queryKey: ["campaign-contacts-preview", user?.id, Array.from(selectedCategories), Array.from(selectedRegions)],
@@ -285,6 +300,16 @@ const CampaignCreate = () => {
                     <span className="text-sm font-medium">캠페인을 만들려면 구독이 필요합니다.</span>
                     <Button size="sm" variant="default" onClick={() => navigate("/pricing")}>
                       요금제 보기
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+              {!hasVerifiedDomain && (
+                <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+                  <AlertDescription className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-amber-800 dark:text-amber-200">⚠️ 발송 도메인이 설정되지 않았습니다. 스팸으로 분류될 수 있습니다.</span>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/domains")}>
+                      도메인 설정하기
                     </Button>
                   </AlertDescription>
                 </Alert>
