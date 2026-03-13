@@ -314,6 +314,7 @@ const CampaignCreate = () => {
                   </AlertDescription>
                 </Alert>
               )}
+              <div className="space-y-2">
                 <Label htmlFor="campaign-name" className="flex items-center gap-2">
                   <Megaphone className="h-4 w-4 text-muted-foreground" />캠페인 이름
                 </Label>
