@@ -240,7 +240,7 @@ const CampaignDetail = () => {
               <Pause className="h-3.5 w-3.5" />일시정지
             </Button>
           ) : (campaign?.status === "draft" || campaign?.status === "paused") ? (
-            <Button size="sm" onClick={() => updateStatus("active")} disabled={isSending} className="gap-1.5">
+            <Button size="sm" onClick={() => setChecklistOpen(true)} disabled={isSending} className="gap-1.5">
               <Play className="h-3.5 w-3.5" />{isSending ? "발송 중..." : "시작"}
             </Button>
           ) : null}
