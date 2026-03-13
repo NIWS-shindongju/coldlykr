@@ -80,9 +80,14 @@ const WarmupPage = () => {
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      // Check for duplicate
+      const existing = warmups.find((w: any) => w.email === newEmail.trim());
+      if (existing) {
+        throw new Error("DUPLICATE");
+      }
       const { error } = await supabase.from("email_warmups").insert({
         user_id: user!.id,
-        email: newEmail,
+        email: newEmail.trim(),
         duration_weeks: parseInt(newDuration),
         status: "idle",
       });
@@ -94,7 +99,13 @@ const WarmupPage = () => {
       setNewEmail("");
       toast.success("워밍업 이메일이 추가되었습니다.");
     },
-    onError: () => toast.error("추가 실패"),
+    onError: (err: Error) => {
+      if (err.message === "DUPLICATE") {
+        toast.error("이미 등록된 이메일입니다.");
+      } else {
+        toast.error("추가 실패");
+      }
+    },
   });
 
   const startMutation = useMutation({

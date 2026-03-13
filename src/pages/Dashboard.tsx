@@ -31,7 +31,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: campaigns = [] } = useQuery({
+  const { data: campaigns = [], isError: campaignsError } = useQuery({
     queryKey: ["campaigns", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +45,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: contactCount = 0 } = useQuery({
+  const { data: contactCount = 0, isError: contactsError } = useQuery({
     queryKey: ["contacts-count", user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
@@ -57,7 +57,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: warmupCount = 0 } = useQuery({
+  const { data: warmupCount = 0, isError: warmupError } = useQuery({
     queryKey: ["warmup-count", user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
@@ -69,7 +69,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: dailyStats = [] } = useQuery({
+  const { data: dailyStats = [], isError: statsError } = useQuery({
     queryKey: ["daily_stats", user?.id],
     queryFn: async () => {
       const sevenDaysAgo = subDays(new Date(), 7).toISOString().split("T")[0];
@@ -83,6 +83,8 @@ const Dashboard = () => {
     },
     enabled: !!user,
   });
+
+  const hasError = campaignsError || contactsError || warmupError || statsError;
 
   const totalSent = campaigns.reduce((s, c) => s + c.total_sent, 0);
   const totalOpened = campaigns.reduce((s, c) => s + c.total_opened, 0);
@@ -131,6 +133,18 @@ const Dashboard = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">대시보드</h1>
+
+      {/* Error state */}
+      {hasError && (
+        <Card className="p-6 mb-8 border-destructive/30 bg-destructive/5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했습니다. 새로고침해주세요.</p>
+            <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+              새로고침
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Onboarding */}
       {showOnboarding && (

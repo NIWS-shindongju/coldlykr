@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Crown, Zap, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const TOSS_CLIENT_KEY = "test_ck_P9BRQmyarYBlDDEzGbML8J07KzLN";
@@ -38,6 +39,7 @@ const plans = [
 
 const Pricing = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentPlan, setCurrentPlan] = useState<string>("free");
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -54,7 +56,11 @@ const Pricing = () => {
   }, [user]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      navigate("/login");
+      return;
+    }
     setLoading(planId);
 
     try {
