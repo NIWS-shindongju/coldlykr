@@ -134,6 +134,18 @@ const Dashboard = () => {
     <div>
       <h1 className="text-2xl font-bold mb-6">대시보드</h1>
 
+      {/* Error state */}
+      {hasError && (
+        <Card className="p-6 mb-8 border-destructive/30 bg-destructive/5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-destructive">데이터를 불러오지 못했습니다. 새로고침해주세요.</p>
+            <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+              새로고침
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* Onboarding */}
       {showOnboarding && (
         <Card className="p-6 mb-8 border-primary/20 bg-primary/5">

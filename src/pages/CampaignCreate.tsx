@@ -762,7 +762,13 @@ const CampaignCreate = () => {
             {currentStep + 1} / {steps.length}
           </div>
           <Button
-            onClick={() => setCurrentStep((s) => s + 1)}
+            onClick={() => {
+              if (currentStep === 2 && !body.trim()) {
+                toast.error("이메일 본문을 입력해주세요.");
+                return;
+              }
+              setCurrentStep((s) => s + 1);
+            }}
             disabled={!canProceed()}
           >
             {currentStep === 3 ? "최종 확인" : "다음"}<ArrowRight className="h-4 w-4 ml-2" />

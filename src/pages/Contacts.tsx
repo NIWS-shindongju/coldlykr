@@ -196,7 +196,11 @@ const Contacts = () => {
           }
 
           setUploadProgress(100);
-          toast.success(`총 ${inserted}개 연락처가 추가되었습니다.`);
+          let summaryMsg = `총 ${inserted}개 연락처가 추가되었습니다.`;
+          if (skippedCount > 0) {
+            summaryMsg += ` ${skippedCount}개 무시됨 (업종·지역 값 확인 필요)`;
+          }
+          toast.success(summaryMsg);
           queryClient.invalidateQueries({ queryKey: ["contacts"] });
           setTimeout(() => setUploadProgress(null), 1500);
         },

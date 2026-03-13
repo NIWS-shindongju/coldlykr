@@ -56,7 +56,11 @@ const Pricing = () => {
   }, [user]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      navigate("/login");
+      return;
+    }
     setLoading(planId);
 
     try {
