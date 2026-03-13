@@ -58,7 +58,9 @@ interface SequenceEmail {
 const CampaignCreate = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
+  const location = useLocation();
+  const preselectedContactIds: string[] | null = (location.state as any)?.selectedContactIds ?? null;
+  const [currentStep, setCurrentStep] = useState(preselectedContactIds ? 2 : 0);
 
   // Step 1
   const [campaignName, setCampaignName] = useState("");
