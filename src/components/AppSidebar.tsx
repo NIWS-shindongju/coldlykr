@@ -77,7 +77,7 @@ export function AppSidebar() {
         {/* 큐디비 Partner Link */}
         <div className="mt-auto px-4 pb-4">
           <a
-            href="https://qudb.co.kr"
+            href="https://qdb.kr"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-lg border bg-sidebar-accent/50 p-2.5 hover:bg-sidebar-accent transition-colors"
