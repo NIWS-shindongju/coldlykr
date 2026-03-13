@@ -479,6 +479,17 @@ const CampaignDetail = () => {
           <p className="text-xs text-muted-foreground mt-2">{filteredContacts.length}건 표시</p>
         </CardContent>
       </Card>
+      {/* ── 발송 전 체크리스트 모달 ── */}
+      {campaign && (
+        <SendChecklistModal
+          open={checklistOpen}
+          onOpenChange={setChecklistOpen}
+          campaign={campaign}
+          pendingCount={stats.pending}
+          onConfirm={() => { setChecklistOpen(false); updateStatus("active"); }}
+          isSending={isSending}
+        />
+      )}
     </div>
   );
 };
