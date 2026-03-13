@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { format, subDays, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -14,12 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -28,10 +23,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  ArrowLeft, Play, Pause, Trash2, Square, Send, MailOpen, AlertCircle, Clock, CheckCircle2,
-  MousePointerClick, MessageSquare, Download, CalendarIcon, BarChart3, ChevronDown, Mail,
-  User, Settings2,
+  ArrowLeft, Play, Pause, Trash2, Send, MailOpen, AlertCircle, CheckCircle2,
+  MessageSquare, Download, BarChart3, ChevronDown, Mail, Settings2, Rocket,
+  AlertTriangle, XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SendChecklistModal } from "@/components/campaign/SendChecklistModal";
@@ -69,7 +65,10 @@ const CampaignDetail = () => {
   const [isSending, setIsSending] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [bodyOpen, setBodyOpen] = useState(false);
+  const [errorLogOpen, setErrorLogOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const autoPausedRef = useRef(false);
+  const autoCompletedRef = useRef(false);
 
   // Campaign data
   const { data: campaign, refetch: refetchCampaign } = useQuery({
@@ -123,6 +122,54 @@ const CampaignDetail = () => {
 
   const totalSent = stats.sent + stats.opened + stats.clicked + stats.replied;
   const pct = (n: number) => totalSent > 0 ? ((n / totalSent) * 100).toFixed(1) : "0.0";
+  const completedCount = stats.sent + stats.opened + stats.clicked + stats.replied + stats.bounced;
+  const progressPercent = stats.total > 0 ? (completedCount / stats.total) * 100 : 0;
+
+  // Bounce rate
+  const bounceRate = totalSent > 0 ? (stats.bounced / (totalSent + stats.bounced)) * 100 : 0;
+
+  // [개선 2] Auto-pause on >10% bounce rate
+  useEffect(() => {
+    if (!id || !campaign || campaign.status !== "active" || autoPausedRef.current) return;
+    if (bounceRate > 10) {
+      autoPausedRef.current = true;
+      supabase.from("campaigns").update({ status: "paused" as any }).eq("id", id).then(() => {
+        refetchCampaign();
+        toast.error("🚨 반송률이 10%를 초과하여 캠페인이 자동 일시정지됐습니다.");
+      });
+    }
+  }, [bounceRate, campaign?.status, id]);
+
+  // [개선 4] Auto-complete when pending=0
+  useEffect(() => {
+    if (!id || !campaign || autoCompletedRef.current) return;
+    if (campaign.status !== "active") return;
+    if (stats.total > 0 && stats.pending === 0) {
+      autoCompletedRef.current = true;
+      supabase.from("campaigns").update({ status: "completed" as any }).eq("id", id).then(() => {
+        refetchCampaign();
+        toast.success("모든 발송이 완료되었습니다! 🎉");
+      });
+    }
+  }, [stats.pending, stats.total, campaign?.status, id]);
+
+  // Estimated time remaining
+  const estimatedMinutes = useMemo(() => {
+    const interval = campaign?.send_interval ?? 60;
+    return Math.ceil((stats.pending * interval) / 60);
+  }, [stats.pending, campaign?.send_interval]);
+
+  const estimatedTimeText = useMemo(() => {
+    if (estimatedMinutes < 60) return `약 ${estimatedMinutes}분 후`;
+    const h = Math.floor(estimatedMinutes / 60);
+    const m = estimatedMinutes % 60;
+    return m > 0 ? `약 ${h}시간 ${m}분 후` : `약 ${h}시간 후`;
+  }, [estimatedMinutes]);
+
+  // Error logs
+  const errorLogs = useMemo(() => {
+    return allContacts.filter((c: any) => c.status === "bounced" && c.error_message);
+  }, [allContacts]);
 
   // Chart data
   const chartData = useMemo(() => {
@@ -214,8 +261,6 @@ const CampaignDetail = () => {
     navigate("/campaigns");
   };
 
-  const completedCount = stats.sent + stats.opened + stats.clicked + stats.replied + stats.bounced;
-  const progressPercent = stats.total > 0 ? (completedCount / stats.total) * 100 : 0;
   const cStatus = CAMPAIGN_STATUS_MAP[campaign?.status ?? "draft"];
 
   return (
@@ -271,6 +316,66 @@ const CampaignDetail = () => {
           </AlertDialog>
         </div>
       </div>
+
+      {/* ── [개선 4] 발송 완료 배너 ── */}
+      {campaign?.status === "completed" && (
+        <Alert className="border-[hsl(var(--success))] bg-[hsl(var(--success))]/10">
+          <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
+          <AlertDescription className="text-sm">
+            <span className="font-semibold">✅ 발송 완료</span>
+            <span className="ml-3 text-muted-foreground">
+              총 {totalSent}건 발송 · 열람률 {pct(stats.opened + stats.clicked + stats.replied)}% · 답장률 {pct(stats.replied)}%
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* ── [개선 1] 발송 진행 중 실시간 카드 ── */}
+      {campaign?.status === "active" && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Rocket className="h-5 w-5 text-primary" />
+                <span className="font-semibold">🚀 발송 진행 중</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => updateStatus("paused")} className="gap-1.5">
+                <Pause className="h-3.5 w-3.5" />일시정지
+              </Button>
+            </div>
+            <Progress value={progressPercent} className="h-2.5 mb-3" />
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+              <span>진행률: <span className="font-medium text-foreground">{progressPercent.toFixed(1)}%</span></span>
+              <span>오늘 발송: <span className="font-medium text-foreground">{campaign.daily_sent_count ?? 0}건</span> / 하루 최대: <span className="font-medium text-foreground">{campaign.max_per_day ?? 100}건</span></span>
+              <span>대기: <span className="font-medium text-foreground">{stats.pending}건</span></span>
+              <span>예상 완료: <span className="font-medium text-foreground">{estimatedTimeText}</span></span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── [개선 2] 반송률 경고 배너 ── */}
+      {bounceRate > 5 && bounceRate <= 10 && campaign?.status === "active" && (
+        <Alert className="border-[hsl(var(--warning))] bg-[hsl(var(--warning))]/10">
+          <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span className="text-sm">
+              ⚠️ 반송률이 5%를 초과했습니다 ({bounceRate.toFixed(1)}%). 캠페인을 일시정지하고 수신자 목록을 확인하세요.
+            </span>
+            <Button variant="outline" size="sm" onClick={() => updateStatus("paused")} className="shrink-0 gap-1.5">
+              <Pause className="h-3.5 w-3.5" />일시정지
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      {bounceRate > 10 && (
+        <Alert variant="destructive">
+          <XCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            🚨 반송률이 10%를 초과하여 캠페인이 자동 일시정지됐습니다. 수신자 목록을 확인하세요.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* ── 핵심 지표 카드 4개 ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -479,6 +584,60 @@ const CampaignDetail = () => {
           <p className="text-xs text-muted-foreground mt-2">{filteredContacts.length}건 표시</p>
         </CardContent>
       </Card>
+
+      {/* ── [개선 3] 오류 로그 ── */}
+      <Collapsible open={errorLogOpen} onOpenChange={setErrorLogOpen}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  오류 로그
+                  {errorLogs.length > 0 && (
+                    <Badge variant="destructive" className="ml-1">{errorLogs.length}</Badge>
+                  )}
+                </CardTitle>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", errorLogOpen && "rotate-180")} />
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {errorLogs.length === 0 ? (
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
+                  <CheckCircle2 className="h-4 w-4 mr-2 text-[hsl(var(--success))]" />
+                  발송 오류가 없습니다 ✅
+                </div>
+              ) : (
+                <div className="rounded-lg border overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>이메일</TableHead>
+                        <TableHead>오류 내용</TableHead>
+                        <TableHead>발생 시각</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {errorLogs.map((log: any) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="text-sm">{log.contacts?.email ?? "-"}</TableCell>
+                          <TableCell className="text-sm text-destructive">{log.error_message}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {log.sent_at ? format(new Date(log.sent_at), "MM.dd HH:mm", { locale: ko }) : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       {/* ── 발송 전 체크리스트 모달 ── */}
       {campaign && (
         <SendChecklistModal
