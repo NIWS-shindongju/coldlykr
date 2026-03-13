@@ -300,6 +300,23 @@ const CampaignCreate = () => {
         {/* Step 2: Recipients */}
         {currentStep === 1 && (
           <>
+            {preselectedContactIds ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">수신자 선택</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-primary/5">
+                    <Mail className="h-5 w-5 text-primary" />
+                    <div>
+                      <p className="font-medium text-sm">연락처에서 직접 선택됨</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">선택된 연락처 <span className="text-primary font-semibold">{preselectedContactIds.length}개</span>로 발송합니다.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+            <>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">수신자 선택</CardTitle>
@@ -420,6 +437,8 @@ const CampaignCreate = () => {
                 )}
               </CardContent>
             </Card>
+            </>
+            )}
           </>
         )}
 
