@@ -57,7 +57,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: warmupCount = 0 } = useQuery({
+  const { data: warmupCount = 0, isError: warmupError } = useQuery({
     queryKey: ["warmup-count", user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
@@ -69,7 +69,7 @@ const Dashboard = () => {
     enabled: !!user,
   });
 
-  const { data: dailyStats = [] } = useQuery({
+  const { data: dailyStats = [], isError: statsError } = useQuery({
     queryKey: ["daily_stats", user?.id],
     queryFn: async () => {
       const sevenDaysAgo = subDays(new Date(), 7).toISOString().split("T")[0];
