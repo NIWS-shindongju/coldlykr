@@ -183,17 +183,24 @@ const CampaignCreate = () => {
     }
 
     // 2. Fetch matching contacts and create campaign_contacts
-    let contactQuery = supabase.from("contacts").select("id").limit(actualSendCount);
-    if (selectedCategories.size > 0) {
-      contactQuery = contactQuery.in("category", Array.from(selectedCategories));
-    }
-    if (selectedRegions.size > 0) {
-      contactQuery = contactQuery.in("region", Array.from(selectedRegions));
-    }
-    const { data: contactIds } = await contactQuery;
+    let contactIdList: { id: string }[] = [];
 
-    if (contactIds && contactIds.length > 0) {
-      const rows = contactIds.map((c) => ({
+    if (preselectedContactIds && preselectedContactIds.length > 0) {
+      contactIdList = preselectedContactIds.map((id) => ({ id }));
+    } else {
+      let contactQuery = supabase.from("contacts").select("id").limit(actualSendCount);
+      if (selectedCategories.size > 0) {
+        contactQuery = contactQuery.in("category", Array.from(selectedCategories));
+      }
+      if (selectedRegions.size > 0) {
+        contactQuery = contactQuery.in("region", Array.from(selectedRegions));
+      }
+      const { data } = await contactQuery;
+      contactIdList = data ?? [];
+    }
+
+    if (contactIdList.length > 0) {
+      const rows = contactIdList.map((c) => ({
         campaign_id: campaign.id,
         contact_id: c.id,
         user_id: user.id,
