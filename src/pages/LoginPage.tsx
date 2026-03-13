@@ -24,9 +24,9 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    setIsSubmitting(false);
 
     if (error) {
       toast.error("이메일 또는 비밀번호가 올바르지 않습니다.");
