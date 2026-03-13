@@ -670,7 +670,9 @@ const CampaignCreate = () => {
                 <SummaryItem label="발송자" value={`${senderName} <${senderEmail}>`} />
                 <SummaryItem label="회신 이메일" value={replyEmail || senderEmail} />
                 <SummaryItem label="이메일 제목" value={subject} />
-                <SummaryItem label="수신자 수" value={`${actualSendCount}명`} />
+                <SummaryItem label="수신자 수" value={preselectedContactIds ? `${preselectedContactIds.length}명 (직접 선택)` : `${actualSendCount}명`} />
+                {!preselectedContactIds && (
+                  <>
                 <SummaryItem
                   label="카테고리"
                   value={selectedCategories.size > 0 ? Array.from(selectedCategories).join(", ") : "전체"}
@@ -679,6 +681,8 @@ const CampaignCreate = () => {
                   label="지역"
                   value={selectedRegions.size > 0 ? Array.from(selectedRegions).join(", ") : "전체"}
                 />
+                  </>
+                )}
                 <SummaryItem label="발송 시점" value={sendNow ? "즉시 발송" : scheduledDate ? `${format(scheduledDate, "yyyy.MM.dd", { locale: ko })} ${scheduledTime}` : "미정"} />
                 <SummaryItem label="하루 최대" value={`${maxPerDay[0]}통`} />
                 <SummaryItem label="발송 간격" value={INTERVALS.find((iv) => iv.value === interval)?.label ?? ""} />
