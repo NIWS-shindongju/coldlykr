@@ -142,18 +142,23 @@ const Contacts = () => {
         skipEmptyLines: true,
         complete: async (results) => {
           const rows = results.data as Record<string, string>[];
-          const mapped = rows
-            .map((row) => {
-              const obj: Record<string, string> = {};
-              for (const [key, val] of Object.entries(row)) {
-                obj[mapColumnName(key)] = val?.trim() ?? "";
-              }
-              return obj;
-            })
+          const allMapped = rows.map((row) => {
+            const obj: Record<string, string> = {};
+            for (const [key, val] of Object.entries(row)) {
+              obj[mapColumnName(key)] = val?.trim() ?? "";
+            }
+            return obj;
+          });
+
+          const withEmail = allMapped
             .filter((r) => r.email && EMAIL_RE.test(r.email))
-            .filter((r) => r.company_name)
+            .filter((r) => r.company_name);
+
+          const mapped = withEmail
             .filter((r) => VALID_CATEGORIES.has(r.category))
             .filter((r) => VALID_REGIONS.has(r.region));
+
+          const skippedCount = withEmail.length - mapped.length;
 
           if (mapped.length === 0) {
             toast.error("유효한 데이터가 없습니다. 컬럼명과 데이터를 확인해 주세요.");
