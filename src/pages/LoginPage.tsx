@@ -28,7 +28,13 @@ const LoginPage = () => {
     setIsSubmitting(false);
 
     if (error) {
-      toast.error("이메일 또는 비밀번호가 올바르지 않습니다.");
+      if (error.message.includes("Email not confirmed")) {
+        toast.error("이메일 인증이 필요합니다. 가입 시 받은 이메일을 확인해주세요.");
+      } else if (error.message.includes("Invalid login credentials")) {
+        toast.error("이메일 또는 비밀번호가 올바르지 않습니다.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
       navigate("/dashboard");
     }
