@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Crown, Zap, Rocket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const TOSS_CLIENT_KEY = "test_ck_P9BRQmyarYBlDDEzGbML8J07KzLN";
