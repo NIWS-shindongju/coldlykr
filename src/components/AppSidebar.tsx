@@ -1,6 +1,5 @@
 import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import qudbLogo from "@/assets/qudb-logo.png";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
