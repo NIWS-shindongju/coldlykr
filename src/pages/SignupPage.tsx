@@ -28,6 +28,12 @@ const SignupPage = () => {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
