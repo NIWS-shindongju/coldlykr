@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SendChecklistModal } from "@/components/campaign/SendChecklistModal";
+import { TestEmailDialog } from "@/components/campaign/TestEmailDialog";
 
 const STATUS_CONFIG: Record<string, { label: string; dotClass: string; badgeClass: string }> = {
   pending: { label: "대기", dotClass: "bg-muted-foreground", badgeClass: "bg-muted text-muted-foreground" },
@@ -67,6 +68,7 @@ const CampaignDetail = () => {
   const [bodyOpen, setBodyOpen] = useState(false);
   const [errorLogOpen, setErrorLogOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const autoPausedRef = useRef(false);
   const autoCompletedRef = useRef(false);
 
@@ -285,9 +287,14 @@ const CampaignDetail = () => {
               <Pause className="h-3.5 w-3.5" />일시정지
             </Button>
           ) : (campaign?.status === "draft" || campaign?.status === "paused") ? (
-            <Button size="sm" onClick={() => setChecklistOpen(true)} disabled={isSending} className="gap-1.5">
-              <Play className="h-3.5 w-3.5" />{isSending ? "발송 중..." : "시작"}
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => setTestDialogOpen(true)} className="gap-1.5">
+                <Send className="h-3.5 w-3.5" />테스트 발송
+              </Button>
+              <Button size="sm" onClick={() => setChecklistOpen(true)} disabled={isSending} className="gap-1.5">
+                <Play className="h-3.5 w-3.5" />{isSending ? "발송 중..." : "시작"}
+              </Button>
+            </>
           ) : null}
 
           <AlertDialog>
@@ -638,6 +645,14 @@ const CampaignDetail = () => {
         </Card>
       </Collapsible>
 
+      {/* ── 테스트 발송 다이얼로그 ── */}
+      {campaign && (
+        <TestEmailDialog
+          open={testDialogOpen}
+          onOpenChange={setTestDialogOpen}
+          campaign={campaign}
+        />
+      )}
       {/* ── 발송 전 체크리스트 모달 ── */}
       {campaign && (
         <SendChecklistModal
