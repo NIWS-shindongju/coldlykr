@@ -46,6 +46,7 @@ const Campaigns = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { plan, isFree, planLimits } = useUserPlan();
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">("all");
 
   const { data: campaigns = [], isLoading } = useQuery({
