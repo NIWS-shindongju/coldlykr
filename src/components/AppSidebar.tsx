@@ -1,5 +1,7 @@
-import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame } from "lucide-react";
+import { LayoutDashboard, Megaphone, Users, Globe, CreditCard, Settings, Flame, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
