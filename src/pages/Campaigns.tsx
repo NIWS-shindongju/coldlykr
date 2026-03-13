@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -13,7 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Send, Pause, Play, Trash2 } from "lucide-react";
+import { Plus, Send, Pause, Play, Trash2, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -45,6 +46,7 @@ const Campaigns = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { plan, isFree, planLimits } = useUserPlan();
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">("all");
 
   const { data: campaigns = [], isLoading } = useQuery({
@@ -114,11 +116,30 @@ const Campaigns = () => {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">캠페인</h1>
         <Button onClick={() => navigate("/campaigns/new")}>
           <Plus className="h-4 w-4 mr-2" />새 캠페인
         </Button>
+      </div>
+
+      {/* Plan usage badge */}
+      <div className="flex items-center gap-2 mb-6">
+        {isFree ? (
+          <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2">
+            <span className="text-sm font-medium text-destructive">무료 플랜 · 구독 필요</span>
+            <Button size="sm" variant="default" onClick={() => navigate("/pricing")}>
+              <Crown className="h-3.5 w-3.5 mr-1" />업그레이드
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2">
+            <Badge variant="secondary" className="capitalize">{plan}</Badge>
+            <span className="text-sm text-muted-foreground">
+              캠페인 {campaigns.length}/{planLimits.campaignLimit === 999 ? "∞" : planLimits.campaignLimit}개 사용 중
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Status filter tabs */}
