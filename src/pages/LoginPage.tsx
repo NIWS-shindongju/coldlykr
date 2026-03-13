@@ -79,8 +79,8 @@ const LoginPage = () => {
             </div>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호 입력" className="mt-1" />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "로그인 중..." : "로그인"}
           </Button>
         </form>
 
