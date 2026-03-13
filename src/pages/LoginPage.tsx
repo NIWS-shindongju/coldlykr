@@ -21,8 +21,7 @@ const LoginPage = () => {
       navigate("/dashboard", { replace: true });
     }
   }, [user, authLoading, navigate]);
-  const [loading, setLoading] = useState(false);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
